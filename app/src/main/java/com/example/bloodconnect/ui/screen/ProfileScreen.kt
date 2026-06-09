@@ -26,12 +26,34 @@ import coil.compose.AsyncImage
 import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.BorderStroke
+
 @Composable
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
     val userData by authViewModel.userData.collectAsState()
+    
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogTitle by remember { mutableStateOf("") }
+    var dialogMessage by remember { mutableStateOf("") }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(dialogTitle, fontWeight = FontWeight.Bold) },
+            text = { Text(dialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("OK", color = Color.Red)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -122,13 +144,29 @@ fun ProfileScreen(
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color.White)
         ) {
-            ProfileMenuItem("Edit Profil", Icons.Default.Edit) {}
+            ProfileMenuItem("Edit Profil", Icons.Default.Edit) {
+                dialogTitle = "Edit Profil"
+                dialogMessage = "Fitur pengeditan profil akan segera hadir!"
+                showDialog = true
+            }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            ProfileMenuItem("Pengaturan", Icons.Default.Settings) {}
+            ProfileMenuItem("Pengaturan", Icons.Default.Settings) {
+                dialogTitle = "Pengaturan"
+                dialogMessage = "Pengaturan aplikasi akan segera hadir!"
+                showDialog = true
+            }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            ProfileMenuItem("Tentang Aplikasi", Icons.Default.Info) {}
+            ProfileMenuItem("Tentang Aplikasi", Icons.Default.Info) {
+                dialogTitle = "Tentang Aplikasi"
+                dialogMessage = "BloodConnect v1.0.0\nMenghubungkan pendonor darah terdekat untuk menyelamatkan nyawa."
+                showDialog = true
+            }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            ProfileMenuItem("Bantuan", Icons.AutoMirrored.Filled.Help) {}
+            ProfileMenuItem("Bantuan", Icons.AutoMirrored.Filled.Help) {
+                dialogTitle = "Bantuan"
+                dialogMessage = "Butuh bantuan?\nHubungi kami di support@bloodconnect.com atau kirim pesan SOS di tab SOS."
+                showDialog = true
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -145,7 +183,7 @@ fun ProfileScreen(
                 .padding(horizontal = 24.dp)
                 .height(50.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-            border = ButtonDefaults.outlinedButtonBorder
+            border = BorderStroke(1.dp, Color.Red)
         ) {
             Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))

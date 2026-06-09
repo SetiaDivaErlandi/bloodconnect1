@@ -22,6 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import com.example.bloodconnect.ui.navigation.Screen
+
 data class Message(
     val text: String,
     val isFromMe: Boolean,
@@ -33,6 +38,7 @@ data class Message(
 fun ChatScreen(navController: NavController) {
 
     var messageText by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     val messages = remember {
         mutableStateListOf(
@@ -100,7 +106,10 @@ fun ChatScreen(navController: NavController) {
 
                 actions = {
 
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {
+                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:08123456789"))
+                        context.startActivity(intent)
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Call,
                             contentDescription = null,
@@ -239,7 +248,9 @@ fun ChatScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Button(
-                        onClick = { },
+                        onClick = {
+                            navController.navigate(Screen.Map.route)
+                        },
 
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFE53935)
