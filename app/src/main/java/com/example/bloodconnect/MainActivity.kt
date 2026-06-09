@@ -40,7 +40,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val userPreferences = com.example.bloodconnect.data.local.UserPreferences(this)
         setContent {
+            val isDarkMode by userPreferences.isDarkMode.collectAsState(initial = false)
             val imageLoader = ImageLoader.Builder(LocalContext.current)
                 .components {
                     add(SvgDecoder.Factory())
@@ -48,7 +50,7 @@ class MainActivity : ComponentActivity() {
                 .build()
             
             CompositionLocalProvider(LocalImageLoader provides imageLoader) {
-                BloodconnectTheme {
+                BloodconnectTheme(darkTheme = isDarkMode) {
                     BloodConnectApp()
                 }
             }
@@ -67,6 +69,12 @@ fun BloodConnectApp() {
     
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    LaunchedEffect(currentDestination) {
+        if (isLoggedIn) {
+            authViewModel.updateActivity()
+        }
+    }
 
     val bottomBarScreens = listOf(
         Screen.Home,
@@ -141,7 +149,7 @@ fun BloodConnectApp() {
                 HomeScreen(navController, bloodViewModel, authViewModel)
             }
             composable(Screen.SOS.route) {
-                SOSScreen(navController)
+                SOSScreen(navController, bloodViewModel, authViewModel)
             }
             composable(Screen.Map.route) {
                 MapScreen(navController, bloodViewModel)
@@ -156,7 +164,7 @@ fun BloodConnectApp() {
                 ProfileScreen(navController, authViewModel)
             }
             composable(Screen.DonorHistory.route) {
-                DonorHistoryScreen(navController)
+                DonorHistoryScreen(navController, bloodViewModel, authViewModel)
             }
             composable(Screen.Education.route) {
                 EducationScreen(navController, bloodViewModel)
@@ -170,13 +178,19 @@ fun BloodConnectApp() {
             ) { backStackEntry ->
                 val title = backStackEntry.arguments?.getString("title") ?: ""
                 val imageUrl = URLDecoder.decode(backStackEntry.arguments?.getString("imageUrl") ?: "", StandardCharsets.UTF_8.toString())
-                EducationDetailScreen(navController, title, imageUrl)
+                EducationDetailScreen(navController, bloodViewModel, title, imageUrl)
             }
             composable(Screen.EducationSteps.route) {
                 EducationStepsScreen(navController)
             }
             composable(Screen.EducationBookmark.route) {
                 EducationBookmarkScreen(navController, bloodViewModel)
+            }
+            composable(Screen.SearchDonor.route) {
+                SearchDonorScreen(navController, bloodViewModel)
+            }
+            composable(Screen.DonorForm.route) {
+                DonorFormScreen(navController, bloodViewModel, authViewModel)
             }
         }
     }

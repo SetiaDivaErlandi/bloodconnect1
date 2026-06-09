@@ -5,10 +5,25 @@ import com.example.bloodconnect.data.model.BloodDataResponse
 import com.example.bloodconnect.data.model.UserResponse
 import com.example.bloodconnect.data.model.Donor
 import com.example.bloodconnect.data.model.Article
+import com.example.bloodconnect.data.model.SosRequestResponse
+import com.example.bloodconnect.data.model.DonationResponse
+import kotlinx.coroutines.flow.Flow
 
 class BloodRepository(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val userPreferences: com.example.bloodconnect.data.local.UserPreferences
 ) {
+    val bookmarks: Flow<Set<String>> = userPreferences.bookmarks
+    val readHistory: Flow<Set<String>> = userPreferences.readHistory
+
+    suspend fun toggleBookmark(title: String) {
+        userPreferences.toggleBookmark(title)
+    }
+
+    suspend fun addArticleToHistory(title: String) {
+        userPreferences.addArticleToHistory(title)
+    }
+
     suspend fun getBloodData(): BloodDataResponse {
         return try {
             val firebaseDonors = apiService.getFirebaseDonors()
@@ -20,7 +35,6 @@ class BloodRepository(
                     articles = firebaseArticles.values.toList()
                 )
             } else {
-                // Seeding Phase: Fetch from GitHub and write to Firebase Realtime Database
                 val gitHubData = apiService.getBloodData()
                 
                 gitHubData.donors.forEach { donor ->
@@ -34,11 +48,15 @@ class BloodRepository(
                 gitHubData
             }
         } catch (e: Exception) {
-            // Fallback: If Firebase setup fails or rules are closed, read from GitHub Raw
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
             try {
                 apiService.getBloodData()
             } catch (ex: Exception) {
-                // Secondary Fallback: Empty response
+                if (ex is java.io.IOException || ex is java.net.UnknownHostException) {
+                    throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+                }
                 BloodDataResponse(emptyList(), emptyList())
             }
         }
@@ -49,7 +67,58 @@ class BloodRepository(
             val firebaseUsers = apiService.getFirebaseUsers()
             firebaseUsers?.values?.toList() ?: apiService.getUsers()
         } catch (e: Exception) {
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
             apiService.getUsers()
+        }
+    }
+
+    suspend fun getSosRequests(): List<SosRequestResponse> {
+        return try {
+            val map = apiService.getFirebaseSosRequests()
+            map?.values?.toList()?.sortedByDescending { it.timestamp } ?: emptyList()
+        } catch (e: Exception) {
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
+            emptyList()
+        }
+    }
+
+    suspend fun saveSosRequest(request: SosRequestResponse): Boolean {
+        return try {
+            apiService.saveFirebaseSosRequest(request.id, request)
+            true
+        } catch (e: Exception) {
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
+            false
+        }
+    }
+
+    suspend fun getDonations(userId: String): List<DonationResponse> {
+        return try {
+            val map = apiService.getFirebaseDonations(userId)
+            map?.values?.toList() ?: emptyList()
+        } catch (e: Exception) {
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
+            emptyList()
+        }
+    }
+
+    suspend fun saveDonation(userId: String, donation: DonationResponse): Boolean {
+        return try {
+            apiService.saveFirebaseDonation(userId, donation.id, donation)
+            true
+        } catch (e: Exception) {
+            if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                throw Exception("Koneksi internet terputus. Silakan periksa koneksi Anda.")
+            }
+            false
         }
     }
 }

@@ -8,11 +8,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,14 +24,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.bloodconnect.ui.viewmodel.BloodViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EducationDetailScreen(
     navController: NavController,
+    viewModel: BloodViewModel,
     title: String,
     imageUrl: String
 ) {
+    val bookmarks by viewModel.bookmarks.collectAsState()
+    val isBookmarked = bookmarks.contains(title)
+
+    LaunchedEffect(title) {
+        viewModel.addArticleToHistory(title)
+    }
+
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
@@ -60,9 +70,9 @@ fun EducationDetailScreen(
                         )
                     }
 
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { viewModel.toggleBookmark(title) }) {
                         Icon(
-                            imageVector = Icons.Default.BookmarkBorder,
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "Bookmark",
                             tint = Color.White
                         )
@@ -131,7 +141,8 @@ fun EducationDetailScreen(
                         Text(
                             text = "BloodConnect Team",
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            color = Color.Black
                         )
 
                         Text(
@@ -147,7 +158,8 @@ fun EducationDetailScreen(
                 Text(
                     text = "Manfaat Donor Darah",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -203,7 +215,8 @@ fun EducationDetailScreen(
                 Text(
                     text = "Sumber Terpercaya",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = Color.Black
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -229,7 +242,8 @@ fun EducationDetailScreen(
                     Text(
                         text = "Palang Merah Indonesia (PMI)",
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
                     )
                 }
 
@@ -264,4 +278,3 @@ fun BenefitItem(text: String) {
         )
     }
 }
-

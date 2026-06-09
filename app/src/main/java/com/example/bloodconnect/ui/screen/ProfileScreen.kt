@@ -1,6 +1,9 @@
 package com.example.bloodconnect.ui.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,9 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,17 +27,13 @@ import coil.compose.AsyncImage
 import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.foundation.BorderStroke
-
 @Composable
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
     val userData by authViewModel.userData.collectAsState()
+    val isDarkModeEnabled by authViewModel.isDarkMode.collectAsState()
     
     var showDialog by remember { mutableStateOf(false) }
     var dialogTitle by remember { mutableStateOf("") }
@@ -46,13 +43,20 @@ fun ProfileScreen(
     var editName by remember { mutableStateOf("") }
     var editPhone by remember { mutableStateOf("") }
     var editLocation by remember { mutableStateOf("") }
+    var editImageUrl by remember { mutableStateOf("") }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     var isNotificationEnabled by remember { mutableStateOf(true) }
-    var isDarkModeEnabled by remember { mutableStateOf(false) }
 
     var showAboutDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+
+    val avatars = listOf(
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&eyes=default&mouth=smile&eyebrowType=default",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&eyes=default&mouth=smile&eyebrowType=default",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Lily&eyes=default&mouth=smile&eyebrowType=default",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&eyes=default&mouth=smile&eyebrowType=default"
+    )
 
     if (showDialog) {
         AlertDialog(
@@ -112,12 +116,35 @@ fun ProfileScreen(
                             cursorColor = Color.Red
                         )
                     )
+
+                    Text(text = "Pilih Avatar Animasi", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        avatars.forEach { url ->
+                            val isSelected = editImageUrl == url
+                            AsyncImage(
+                                model = url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape)
+                                    .border(
+                                        width = if (isSelected) 3.dp else 1.dp,
+                                        color = if (isSelected) Color.Red else Color.LightGray,
+                                        shape = CircleShape
+                                    )
+                                    .clickable { editImageUrl = url }
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        authViewModel.updateProfile(editName, editPhone, editLocation)
+                        authViewModel.updateProfile(editName, editPhone, editLocation, editImageUrl)
                         showEditDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
@@ -173,7 +200,7 @@ fun ProfileScreen(
                         }
                         Switch(
                             checked = isDarkModeEnabled,
-                            onCheckedChange = { isDarkModeEnabled = it },
+                            onCheckedChange = { authViewModel.setDarkMode(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
                                 checkedTrackColor = Color.Red,
@@ -328,7 +355,7 @@ fun ProfileScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = " ${userData?.bloodType ?: "-"} | ${userData?.location ?: "-"}",
+                        text = " ${userData?.bloodType ?: "-"} | ${userData?.location ?: "-"} | ${userData?.gender ?: "Laki-laki"}",
                         color = Color.White.copy(alpha = 0.8f)
                     )
                 }
@@ -360,6 +387,7 @@ fun ProfileScreen(
                 editName = userData?.name ?: ""
                 editPhone = userData?.phone ?: ""
                 editLocation = userData?.location ?: ""
+                editImageUrl = userData?.imageUrl ?: ""
                 showEditDialog = true
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)

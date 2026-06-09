@@ -52,7 +52,7 @@ fun DonorCard(donor: Donor, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(text = donor.name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(text = donor.name, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
                         Text(text = donor.location, fontSize = 11.sp, color = Color.Gray)
@@ -100,7 +100,7 @@ fun ArticleCard(article: Article, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(text = article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(text = article.title, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(text = article.category, color = Color.Red, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 Text(text = article.time, color = Color.Gray, fontSize = 11.sp)
             }

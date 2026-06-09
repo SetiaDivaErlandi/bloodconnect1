@@ -19,4 +19,6 @@ sealed class Screen(val route: String) {
     }
     object EducationSteps : Screen("education_steps")
     object EducationBookmark : Screen("education_bookmark")
+    object SearchDonor : Screen("search_donor")
+    object DonorForm : Screen("donor_form")
 }

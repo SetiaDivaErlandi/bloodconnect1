@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewModel) {
     val bloodDataState by viewModel.bloodData.collectAsState()
+    val bookmarks by viewModel.bookmarks.collectAsState()
+    val readHistory by viewModel.readHistory.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -64,12 +66,12 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Bookmark", fontWeight = FontWeight.Bold) }
+                    text = { Text("Bookmark", fontWeight = FontWeight.Bold, color = if (selectedTab == 0) Color.Red else Color.Gray) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Riwayat Baca", fontWeight = FontWeight.Bold) }
+                    text = { Text("Riwayat Baca", fontWeight = FontWeight.Bold, color = if (selectedTab == 1) Color.Red else Color.Gray) }
                 )
             }
 
@@ -80,15 +82,33 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
                     }
                 }
                 is UiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.data.articles) { article ->
-                            ArticleCard(article) {
-                                val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
-                                navController.navigate(Screen.EducationDetail.createRoute(article.title, encodedUrl))
+                    val filteredArticles = state.data.articles.filter { article ->
+                        if (selectedTab == 0) {
+                            bookmarks.contains(article.title)
+                        } else {
+                            readHistory.contains(article.title)
+                        }
+                    }
+
+                    if (filteredArticles.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = if (selectedTab == 0) "Belum ada artikel yang dibookmark." else "Belum ada riwayat membaca.",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(filteredArticles) { article ->
+                                ArticleCard(article) {
+                                    val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
+                                    navController.navigate(Screen.EducationDetail.createRoute(article.title, encodedUrl))
+                                }
                             }
                         }
                     }

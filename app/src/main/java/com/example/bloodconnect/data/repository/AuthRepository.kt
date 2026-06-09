@@ -30,10 +30,18 @@ class AuthRepository(private val apiService: ApiService) {
         phone: String,
         password: String,
         bloodType: String,
-        location: String
+        location: String,
+        gender: String
     ): UserModel {
         val id = "user_${System.currentTimeMillis()}"
-        val imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=$name&eyes=default&mouth=smile&eyebrowType=default"
+        val avatarSeed = if (gender == "Perempuan") {
+            val girls = listOf("Lily", "Aneka", "Mariah", "Sadie", "Zoe")
+            girls[name.trim().length % girls.size]
+        } else {
+            val boys = listOf("Felix", "Jack", "Oliver", "Charlie", "George")
+            boys[name.trim().length % boys.size]
+        }
+        val imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=$avatarSeed&eyes=default&mouth=smile&eyebrowType=default"
         val userResponse = UserResponse(
             id = id,
             name = name.trim(),
@@ -42,7 +50,8 @@ class AuthRepository(private val apiService: ApiService) {
             bloodType = bloodType,
             location = location,
             imageUrl = imageUrl,
-            phone = phone.trim()
+            phone = phone.trim(),
+            gender = gender
         )
         apiService.registerFirebaseUser(id, userResponse)
         
@@ -53,7 +62,8 @@ class AuthRepository(private val apiService: ApiService) {
             bloodType = userResponse.bloodType,
             location = userResponse.location,
             imageUrl = userResponse.imageUrl,
-            phone = userResponse.phone
+            phone = userResponse.phone,
+            gender = userResponse.gender
         )
     }
 
@@ -61,7 +71,8 @@ class AuthRepository(private val apiService: ApiService) {
         id: String,
         name: String,
         phone: String,
-        location: String
+        location: String,
+        imageUrl: String
     ): UserModel? {
         val usersMap = apiService.getFirebaseUsers() ?: return null
         val existingResponse = usersMap[id] ?: usersMap.values.find { it.id == id } ?: return null
@@ -69,7 +80,8 @@ class AuthRepository(private val apiService: ApiService) {
         val updatedResponse = existingResponse.copy(
             name = name.trim(),
             phone = phone.trim(),
-            location = location.trim()
+            location = location.trim(),
+            imageUrl = imageUrl
         )
         apiService.registerFirebaseUser(id, updatedResponse)
         
@@ -80,7 +92,8 @@ class AuthRepository(private val apiService: ApiService) {
             bloodType = updatedResponse.bloodType,
             location = updatedResponse.location,
             imageUrl = updatedResponse.imageUrl,
-            phone = updatedResponse.phone
+            phone = updatedResponse.phone,
+            gender = updatedResponse.gender
         )
     }
 }

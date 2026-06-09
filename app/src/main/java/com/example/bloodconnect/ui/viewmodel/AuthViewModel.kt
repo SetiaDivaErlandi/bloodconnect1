@@ -32,6 +32,40 @@ class AuthViewModel(
     val userData: StateFlow<UserModel?> = userPreferences.userData
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val isDarkMode: StateFlow<Boolean> = userPreferences.isDarkMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    init {
+        checkSessionExpiry()
+    }
+
+    private fun checkSessionExpiry() {
+        viewModelScope.launch {
+            kotlinx.coroutines.flow.combine(
+                userPreferences.isLoggedIn,
+                userPreferences.lastActivityTime
+            ) { loggedIn, lastActive ->
+                Pair(loggedIn, lastActive)
+            }.collect { (loggedIn, lastActive) ->
+                if (loggedIn && lastActive > 0L && System.currentTimeMillis() - lastActive > 3600000L) {
+                    logout()
+                }
+            }
+        }
+    }
+
+    fun updateActivity() {
+        viewModelScope.launch {
+            userPreferences.updateLastActivityTime()
+        }
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferences.setDarkMode(enabled)
+        }
+    }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -46,12 +80,18 @@ class AuthViewModel(
                     _authState.value = AuthState.Error("Login gagal: Akun tidak ditemukan.")
                 }
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Login gagal: Terjadi kesalahan jaringan.")
+                _authState.value = AuthState.Error(
+                    if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                        "Koneksi internet terputus. Silakan periksa koneksi Anda."
+                    } else {
+                        e.message ?: "Login gagal: Terjadi kesalahan jaringan."
+                    }
+                )
             }
         }
     }
 
-    fun register(name: String, email: String, phone: String, password: String, bloodType: String, location: String) {
+    fun register(name: String, email: String, phone: String, password: String, bloodType: String, location: String, gender: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -61,12 +101,18 @@ class AuthViewModel(
                     phone = phone,
                     password = password,
                     bloodType = bloodType,
-                    location = location
+                    location = location,
+                    gender = gender
                 )
-                userPreferences.saveLoginSession(newUser)
                 _authState.value = AuthState.Success(newUser)
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Registrasi gagal: Terjadi kesalahan.")
+                _authState.value = AuthState.Error(
+                    if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                        "Koneksi internet terputus. Silakan periksa koneksi Anda."
+                    } else {
+                        e.message ?: "Registrasi gagal: Terjadi kesalahan."
+                    }
+                )
             }
         }
     }
@@ -78,7 +124,7 @@ class AuthViewModel(
         }
     }
 
-    fun updateProfile(name: String, phone: String, location: String) {
+    fun updateProfile(name: String, phone: String, location: String, imageUrl: String) {
         val currentUser = userData.value ?: return
         viewModelScope.launch {
             try {
@@ -86,7 +132,8 @@ class AuthViewModel(
                     id = currentUser.id,
                     name = name,
                     phone = phone,
-                    location = location
+                    location = location,
+                    imageUrl = imageUrl
                 )
                 if (updatedUser != null) {
                     userPreferences.saveLoginSession(updatedUser)

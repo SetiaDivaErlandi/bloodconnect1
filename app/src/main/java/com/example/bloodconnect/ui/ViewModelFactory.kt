@@ -15,7 +15,7 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
 
     private val apiService by lazy { RetrofitClient.instance }
 
-    private val bloodRepository by lazy { BloodRepository(apiService) }
+    private val bloodRepository by lazy { BloodRepository(apiService, userPreferences) }
     private val authRepository by lazy { AuthRepository(apiService) }
     private val userPreferences by lazy { UserPreferences(context) }
 

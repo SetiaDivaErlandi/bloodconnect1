@@ -24,7 +24,7 @@ fun EducationStepsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Langkah Donor Darah", color = Color.White) },
+                title = { Text("Langkah Donor Darah", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -42,7 +42,7 @@ fun EducationStepsScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            Text(text = "Langkah demi Langkah", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Langkah demi Langkah", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Text(text = "Pahami tahapan proses donor darah.", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -67,7 +67,7 @@ fun DonorStep(number: Int, title: String, description: String) {
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
             Text(text = description, color = Color.Gray, fontSize = 14.sp)
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(thickness = 0.5.dp)

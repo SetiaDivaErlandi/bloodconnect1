@@ -10,6 +10,7 @@ data class UserModel(
     val location: String,
     val imageUrl: String,
     val phone: String,
+    val gender: String = "Laki-laki",
     val password: String = ""
 )
 
@@ -21,7 +22,27 @@ data class UserResponse(
     @SerializedName("bloodType") val bloodType: String,
     @SerializedName("location") val location: String,
     @SerializedName("imageUrl") val imageUrl: String,
-    @SerializedName("phone") val phone: String
+    @SerializedName("phone") val phone: String,
+    @SerializedName("gender") val gender: String = "Laki-laki"
+)
+
+data class SosRequestResponse(
+    @SerializedName("id") val id: String,
+    @SerializedName("requesterName") val requesterName: String,
+    @SerializedName("bloodType") val bloodType: String,
+    @SerializedName("location") val location: String,
+    @SerializedName("quantity") val quantity: Int,
+    @SerializedName("notes") val notes: String,
+    @SerializedName("timestamp") val timestamp: Long,
+    @SerializedName("requesterPhone") val requesterPhone: String = ""
+)
+
+data class DonationResponse(
+    @SerializedName("id") val id: String,
+    @SerializedName("date") val date: String,
+    @SerializedName("hospital") val hospital: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("isCompleted") val isCompleted: Boolean
 )
 
 data class Donor(

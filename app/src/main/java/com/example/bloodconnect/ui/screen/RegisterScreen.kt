@@ -20,6 +20,7 @@ import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.AuthState
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
@@ -30,18 +31,45 @@ fun RegisterScreen(
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var bloodType by remember { mutableStateOf("O+") }
-    var location by remember { mutableStateOf("Metro, Lampung") }
+    var location by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("Laki-laki") }
     
     val authState by authViewModel.authState.collectAsState()
+    
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var bloodTypeExpanded by remember { mutableStateOf(false) }
+    var genderExpanded by remember { mutableStateOf(false) }
+
+    val bloodTypes = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+    val genders = listOf("Laki-laki", "Perempuan")
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Register.route) { inclusive = true }
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
+            showSuccessDialog = true
             authViewModel.resetAuthState()
         }
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSuccessDialog = false
+                navController.popBackStack()
+            },
+            title = { Text("Registrasi Berhasil", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = { Text("Akun Anda telah berhasil dibuat. Silakan masuk menggunakan email dan password Anda.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.popBackStack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("OK", color = Color.White)
+                }
+            }
+        )
     }
 
     Column(
@@ -129,6 +157,98 @@ fun RegisterScreen(
             )
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = bloodTypeExpanded,
+            onExpandedChange = { bloodTypeExpanded = !bloodTypeExpanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = bloodType,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Golongan Darah") },
+                leadingIcon = { Icon(Icons.Default.Bloodtype, contentDescription = null, tint = Color.Red) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bloodTypeExpanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    focusedLabelColor = Color.Red,
+                    cursorColor = Color.Red
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = bloodTypeExpanded,
+                onDismissRequest = { bloodTypeExpanded = false }
+            ) {
+                bloodTypes.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(type) },
+                        onClick = {
+                            bloodType = type
+                            bloodTypeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = genderExpanded,
+            onExpandedChange = { genderExpanded = !genderExpanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = gender,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Jenis Kelamin") },
+                leadingIcon = { Icon(Icons.Default.Wc, contentDescription = null) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    focusedLabelColor = Color.Red,
+                    cursorColor = Color.Red
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = genderExpanded,
+                onDismissRequest = { genderExpanded = false }
+            ) {
+                genders.forEach { g ->
+                    DropdownMenuItem(
+                        text = { Text(g) },
+                        onClick = {
+                            gender = g
+                            genderExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = location,
+            onValueChange = { location = it },
+            label = { Text("Lokasi (Kota/Kabupaten)") },
+            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Red,
+                focusedLabelColor = Color.Red,
+                cursorColor = Color.Red
+            )
+        )
+
         if (authState is AuthState.Error) {
             Text(
                 text = (authState as AuthState.Error).message,
@@ -141,9 +261,8 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
-                    // Registration saves credentials to local DataStore for simulation
-                    authViewModel.register(name, email, phone, password, bloodType, location)
+                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && location.isNotBlank()) {
+                    authViewModel.register(name, email, phone, password, bloodType, location, gender)
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),

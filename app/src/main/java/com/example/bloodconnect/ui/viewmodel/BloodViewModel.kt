@@ -3,9 +3,13 @@ package com.example.bloodconnect.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bloodconnect.data.model.BloodDataResponse
+import com.example.bloodconnect.data.model.SosRequestResponse
+import com.example.bloodconnect.data.model.DonationResponse
 import com.example.bloodconnect.data.repository.BloodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class UiState<out T> {
@@ -19,8 +23,21 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
     private val _bloodData = MutableStateFlow<UiState<BloodDataResponse>>(UiState.Loading)
     val bloodData: StateFlow<UiState<BloodDataResponse>> = _bloodData
 
+    private val _sosRequests = MutableStateFlow<UiState<List<SosRequestResponse>>>(UiState.Loading)
+    val sosRequests: StateFlow<UiState<List<SosRequestResponse>>> = _sosRequests
+
+    private val _donations = MutableStateFlow<UiState<List<DonationResponse>>>(UiState.Loading)
+    val donations: StateFlow<UiState<List<DonationResponse>>> = _donations
+
+    val bookmarks: StateFlow<Set<String>> = repository.bookmarks
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    val readHistory: StateFlow<Set<String>> = repository.readHistory
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     init {
         fetchBloodData()
+        fetchSosRequests()
     }
 
     fun fetchBloodData() {
@@ -30,8 +47,94 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
                 val response = repository.getBloodData()
                 _bloodData.value = UiState.Success(response)
             } catch (e: Exception) {
-                _bloodData.value = UiState.Error(e.message ?: "Unknown Error")
+                _bloodData.value = UiState.Error(
+                    if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                        "Koneksi internet terputus. Silakan periksa koneksi Anda."
+                    } else {
+                        e.message ?: "Unknown Error"
+                    }
+                )
             }
+        }
+    }
+
+    fun fetchSosRequests() {
+        viewModelScope.launch {
+            _sosRequests.value = UiState.Loading
+            try {
+                val list = repository.getSosRequests()
+                _sosRequests.value = UiState.Success(list)
+            } catch (e: Exception) {
+                _sosRequests.value = UiState.Error(
+                    if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                        "Koneksi internet terputus. Silakan periksa koneksi Anda."
+                    } else {
+                        e.message ?: "Gagal memuat permintaan SOS"
+                    }
+                )
+            }
+        }
+    }
+
+    fun sendSosRequest(request: SosRequestResponse, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.saveSosRequest(request)
+                if (result) {
+                    fetchSosRequests()
+                    onSuccess()
+                } else {
+                    onError("Gagal mengirim SOS Alert.")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Gagal mengirim SOS Alert.")
+            }
+        }
+    }
+
+    fun fetchDonations(userId: String) {
+        viewModelScope.launch {
+            _donations.value = UiState.Loading
+            try {
+                val list = repository.getDonations(userId)
+                _donations.value = UiState.Success(list)
+            } catch (e: Exception) {
+                _donations.value = UiState.Error(
+                    if (e is java.io.IOException || e is java.net.UnknownHostException) {
+                        "Koneksi internet terputus. Silakan periksa koneksi Anda."
+                    } else {
+                        e.message ?: "Gagal memuat riwayat donor"
+                    }
+                )
+            }
+        }
+    }
+
+    fun submitDonation(userId: String, donation: DonationResponse, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.saveDonation(userId, donation)
+                if (result) {
+                    fetchDonations(userId)
+                    onSuccess()
+                } else {
+                    onError("Gagal mengirim formulir donor.")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Gagal mengirim formulir donor.")
+            }
+        }
+    }
+
+    fun toggleBookmark(title: String) {
+        viewModelScope.launch {
+            repository.toggleBookmark(title)
+        }
+    }
+
+    fun addArticleToHistory(title: String) {
+        viewModelScope.launch {
+            repository.addArticleToHistory(title)
         }
     }
 }

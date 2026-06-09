@@ -239,7 +239,7 @@ fun MenuSection(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            MenuItem("Cari Pendonor", Icons.Default.Search) { navController.navigate(Screen.Map.route) }
+            MenuItem("Cari Pendonor", Icons.Default.Search) { navController.navigate(Screen.SearchDonor.route) }
             MenuItem("Pendonor Terdekat", Icons.Default.LocationOn) { navController.navigate(Screen.Map.route) }
             MenuItem("Riwayat Donor", Icons.Default.History) { navController.navigate(Screen.DonorHistory.route) }
         }
@@ -248,7 +248,7 @@ fun MenuSection(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            MenuItem("Chat", Icons.AutoMirrored.Filled.Chat) { navController.navigate(Screen.Chat.route) }
+            MenuItem("Chat", Icons.AutoMirrored.Filled.Chat) { navController.navigate(Screen.ChatList.route) }
             MenuItem("Edukasi", Icons.AutoMirrored.Filled.MenuBook) { navController.navigate(Screen.Education.route) }
             MenuItem("Profil Saya", Icons.Default.Person) { navController.navigate(Screen.Profile.route) }
         }

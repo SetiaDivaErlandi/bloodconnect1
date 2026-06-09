@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets
 fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
     val bloodDataState by viewModel.bloodData.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+    var selectedCategoryFilter by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -51,7 +52,6 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
         ) {
-            // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -69,12 +69,35 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                 )
             )
 
-            // Categories
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clickable { navController.navigate(Screen.EducationSteps.route) },
+                colors = CardDefaults.cardColors(containerColor = Color.Red),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(text = "Langkah Donor Darah", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(text = "Pelajari 5 langkah proses sebelum melakukan donor.", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
                 text = "Kategori",
                 modifier = Modifier.padding(horizontal = 16.dp),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.Black
             )
             
             Row(
@@ -83,22 +106,29 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                EducationCategoryItem("Donor Darah", Icons.Default.Bloodtype, Color.Red) { 
-                    navController.navigate(Screen.EducationSteps.route) 
+                val isDonorSelected = selectedCategoryFilter == "Donor"
+                EducationCategoryItem("Donor", Icons.Default.Bloodtype, Color.Red, isDonorSelected) { 
+                    selectedCategoryFilter = if (isDonorSelected) null else "Donor"
                 }
-                EducationCategoryItem("Syarat & Tips", Icons.AutoMirrored.Filled.Assignment, Color.Red) { }
-                EducationCategoryItem("Manfaat", Icons.Default.Favorite, Color.Red) { }
-                EducationCategoryItem("Favorit", Icons.Default.Bookmark, Color.Red) { 
+                val isTipsSelected = selectedCategoryFilter == "Tips"
+                EducationCategoryItem("Syarat & Tips", Icons.AutoMirrored.Filled.Assignment, Color.Red, isTipsSelected) { 
+                    selectedCategoryFilter = if (isTipsSelected) null else "Tips"
+                }
+                val isManfaatSelected = selectedCategoryFilter == "Kesehatan"
+                EducationCategoryItem("Manfaat", Icons.Default.Favorite, Color.Red, isManfaatSelected) { 
+                    selectedCategoryFilter = if (isManfaatSelected) null else "Kesehatan"
+                }
+                EducationCategoryItem("Favorit Saya", Icons.Default.Bookmark, Color.Red, false) { 
                     navController.navigate(Screen.EducationBookmark.route) 
                 }
             }
 
-            // Article List
             Text(
                 text = "Artikel Populer",
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.Black
             )
 
             when (val state = bloodDataState) {
@@ -113,10 +143,10 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val filteredArticles = if (searchQuery.isBlank()) {
-                            state.data.articles
-                        } else {
-                            state.data.articles.filter { it.title.contains(searchQuery, ignoreCase = true) }
+                        val filteredArticles = state.data.articles.filter { article ->
+                            val matchesSearch = article.title.contains(searchQuery, ignoreCase = true)
+                            val matchesCategory = selectedCategoryFilter == null || article.category.contains(selectedCategoryFilter!!, ignoreCase = true)
+                            matchesSearch && matchesCategory
                         }
                         
                         items(filteredArticles) { article ->
@@ -136,20 +166,21 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
 }
 
 @Composable
-fun EducationCategoryItem(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, onClick: () -> Unit) {
+fun EducationCategoryItem(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, isSelected: Boolean, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(80.dp)) {
         Box(
             modifier = Modifier
                 .size(60.dp)
-                .background(color.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                .background(if (isSelected) color else color.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = label, tint = if (isSelected) Color.White else color, modifier = Modifier.size(28.dp))
         }
         Text(
             text = label, 
             fontSize = 11.sp, 
+            color = Color.Black,
             modifier = Modifier.padding(top = 6.dp), 
             fontWeight = FontWeight.Medium,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
