@@ -61,7 +61,7 @@ fun SearchDonorScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             OutlinedTextField(
                 value = searchQuery,
@@ -74,9 +74,11 @@ fun SearchDonorScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Red,
-                    unfocusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     cursorColor = Color.Red,
-                    focusedLabelColor = Color.Red
+                    focusedLabelColor = Color.Red,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = true
             )
@@ -86,7 +88,7 @@ fun SearchDonorScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             LazyRow(
@@ -98,12 +100,17 @@ fun SearchDonorScreen(
                     FilterChip(
                         selected = type == selectedBloodType,
                         onClick = { selectedBloodType = type },
-                        label = { Text(type, color = if (type == selectedBloodType) Color.White else Color.Black) },
+                        label = { 
+                            Text(
+                                type, 
+                                color = if (type == selectedBloodType) Color.White else MaterialTheme.colorScheme.onSurface 
+                            ) 
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color.Red,
                             selectedLabelColor = Color.White,
-                            containerColor = Color.White,
-                            labelColor = Color.Black
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -123,7 +130,11 @@ fun SearchDonorScreen(
 
                     if (filteredDonors.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(text = "Tidak ada pendonor yang sesuai.", color = Color.Gray, fontSize = 14.sp)
+                            Text(
+                                text = "Tidak ada pendonor yang sesuai.", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                                fontSize = 14.sp
+                            )
                         }
                     } else {
                         LazyColumn(
@@ -139,7 +150,7 @@ fun SearchDonorScreen(
                                         context.startActivity(intent)
                                     },
                                     onChat = {
-                                        navController.navigate(Screen.Chat.route)
+                                        navController.navigate(Screen.Chat.createRoute(donor.name))
                                     }
                                 )
                             }
@@ -160,7 +171,7 @@ fun SearchDonorScreen(
 fun SearchDonorItem(donor: Donor, onCall: () -> Unit, onChat: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -181,16 +192,30 @@ fun SearchDonorItem(donor: Donor, onCall: () -> Unit, onChat: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = donor.name, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = "Golongan Darah: ${donor.bloodType}", fontSize = 12.sp, color = Color.Red, fontWeight = FontWeight.SemiBold)
-                Text(text = donor.location, fontSize = 12.sp, color = Color.Gray)
+                Text(
+                    text = donor.name, 
+                    color = MaterialTheme.colorScheme.onSurface, 
+                    fontWeight = FontWeight.Bold, 
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = "Golongan Darah: ${donor.bloodType}", 
+                    fontSize = 12.sp, 
+                    color = Color.Red, 
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = donor.location, 
+                    fontSize = 12.sp, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onChat,
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFE3F2FD), CircleShape)
+                        .background(Color(0xFFE3F2FD).copy(alpha = 0.2f), CircleShape)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.Blue, modifier = Modifier.size(20.dp))
                 }
@@ -199,7 +224,7 @@ fun SearchDonorItem(donor: Donor, onCall: () -> Unit, onChat: () -> Unit) {
                     onClick = onCall,
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFE8F5E9), CircleShape)
+                        .background(Color(0xFFE8F5E9).copy(alpha = 0.2f), CircleShape)
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
                 }

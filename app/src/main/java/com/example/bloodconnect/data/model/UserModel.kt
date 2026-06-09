@@ -15,15 +15,15 @@ data class UserModel(
 )
 
 data class UserResponse(
-    @SerializedName("id") val id: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("email") val email: String,
-    @SerializedName("password") val password: String,
-    @SerializedName("bloodType") val bloodType: String,
-    @SerializedName("location") val location: String,
-    @SerializedName("imageUrl") val imageUrl: String,
-    @SerializedName("phone") val phone: String,
-    @SerializedName("gender") val gender: String = "Laki-laki"
+    @SerializedName("id") val id: String?,
+    @SerializedName("name") val name: String?,
+    @SerializedName("email") val email: String?,
+    @SerializedName("password") val password: String?,
+    @SerializedName("bloodType") val bloodType: String?,
+    @SerializedName("location") val location: String?,
+    @SerializedName("imageUrl") val imageUrl: String?,
+    @SerializedName("phone") val phone: String?,
+    @SerializedName("gender") val gender: String? = "Laki-laki"
 )
 
 data class SosRequestResponse(
@@ -51,7 +51,10 @@ data class Donor(
     @SerializedName("bloodType") val bloodType: String,
     @SerializedName("distance") val distance: String,
     @SerializedName("location") val location: String,
-    @SerializedName("imageUrl") val imageUrl: String
+    @SerializedName("imageUrl") val imageUrl: String,
+    @SerializedName("phone") val phone: String = "08123456789",
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null
 )
 
 data class Article(

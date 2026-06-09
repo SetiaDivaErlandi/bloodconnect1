@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,13 +45,17 @@ fun ChatListScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxSize().background(Color.White)) {
+        Column(modifier = Modifier.padding(innerPadding).fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             LazyColumn {
                 items(chatHistory) { chat ->
                     ChatItem(chat) {
-                        navController.navigate(Screen.Chat.route)
+                        navController.navigate(Screen.Chat.createRoute(chat.name))
                     }
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = Color.LightGray)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp), 
+                        thickness = 0.5.dp, 
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
                 }
             }
         }
@@ -77,9 +79,19 @@ fun ChatItem(chat: ChatPreview, onClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = chat.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(text = chat.lastMessage, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+            Text(
+                text = chat.name, 
+                fontWeight = FontWeight.Bold, 
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = chat.lastMessage, 
+                fontSize = 14.sp, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                maxLines = 1
+            )
         }
-        Text(text = chat.time, fontSize = 12.sp, color = Color.Gray)
+        Text(text = chat.time, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

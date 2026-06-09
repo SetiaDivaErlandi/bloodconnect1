@@ -108,11 +108,11 @@ fun SOSScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.Red,
                 indicator = { tabPositions ->
                     if (selectedTab < tabPositions.size) {
@@ -147,11 +147,11 @@ fun SOSScreen(
                         text = "Butuh Darah Darurat?",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         text = "Kirim permintaan bantuan ke pendonor terdekat.",
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
                     )
 
@@ -168,7 +168,14 @@ fun SOSScreen(
                             readOnly = true,
                             label = { Text("Golongan Darah Dibutuhkan") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Red,
+                                focusedLabelColor = Color.Red,
+                                cursorColor = Color.Red,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -192,7 +199,14 @@ fun SOSScreen(
                         value = location,
                         onValueChange = { location = it },
                         label = { Text("Lokasi / Rumah Sakit") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            focusedLabelColor = Color.Red,
+                            cursorColor = Color.Red,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -202,12 +216,22 @@ fun SOSScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Jumlah Kantong Darah", fontWeight = FontWeight.Medium, color = Color.Black)
+                        Text(
+                            text = "Jumlah Kantong Darah", 
+                            fontWeight = FontWeight.Medium, 
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { if (quantity > 1) quantity-- }) {
                                 Icon(Icons.Default.Remove, contentDescription = null, tint = Color.Red)
                             }
-                            Text(text = quantity.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(horizontal = 8.dp))
+                            Text(
+                                text = quantity.toString(), 
+                                fontSize = 18.sp, 
+                                fontWeight = FontWeight.Bold, 
+                                color = MaterialTheme.colorScheme.onBackground, 
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
                             IconButton(onClick = { quantity++ }) {
                                 Icon(Icons.Default.Add, contentDescription = null, tint = Color.Red)
                             }
@@ -221,7 +245,14 @@ fun SOSScreen(
                         onValueChange = { notes = it },
                         label = { Text("Catatan (Opsional)") },
                         modifier = Modifier.fillMaxWidth().height(120.dp),
-                        placeholder = { Text("Masukkan catatan jika ada...") }
+                        placeholder = { Text("Masukkan catatan jika ada...") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            focusedLabelColor = Color.Red,
+                            cursorColor = Color.Red,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(40.dp))
@@ -271,7 +302,7 @@ fun SOSScreen(
                     is UiState.Success -> {
                         if (state.data.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text(text = "Belum ada permintaan bantuan darah.", color = Color.Gray)
+                                Text(text = "Belum ada permintaan bantuan darah.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         } else {
                             LazyColumn(
@@ -287,7 +318,7 @@ fun SOSScreen(
                                             context.startActivity(intent)
                                         },
                                         onChat = {
-                                            navController.navigate(Screen.Chat.route)
+                                            navController.navigate(Screen.Chat.createRoute(request.requesterName))
                                         }
                                     )
                                 }
@@ -309,7 +340,7 @@ fun SOSScreen(
 fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -325,14 +356,14 @@ fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = request.requesterName, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(text = request.requesterName, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Text(text = "Butuh: ${request.quantity} Kantong", color = Color.Red, fontWeight = FontWeight.Medium, fontSize = 14.sp)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Lokasi: ${request.location}", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(text = "Lokasi: ${request.location}", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             if (request.notes.isNotBlank()) {
-                Text(text = "\"${request.notes}\"", color = Color.DarkGray, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                Text(text = "\"${request.notes}\"", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -343,7 +374,7 @@ fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -
                     onClick = onChat,
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFE3F2FD), CircleShape)
+                        .background(Color(0xFFE3F2FD).copy(alpha = 0.2f), CircleShape)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.Blue, modifier = Modifier.size(20.dp))
                 }
@@ -352,7 +383,7 @@ fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -
                     onClick = onCall,
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFE8F5E9), CircleShape)
+                        .background(Color(0xFFE8F5E9).copy(alpha = 0.2f), CircleShape)
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
                 }

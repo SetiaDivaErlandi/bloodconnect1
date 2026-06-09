@@ -6,8 +6,10 @@ import com.example.bloodconnect.data.model.Donor
 import com.example.bloodconnect.data.model.Article
 import com.example.bloodconnect.data.model.SosRequestResponse
 import com.example.bloodconnect.data.model.DonationResponse
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -27,6 +29,12 @@ interface ApiService {
         @Path("id") id: String,
         @Body user: UserResponse
     ): UserResponse
+
+    @PATCH("users/{id}.json")
+    suspend fun updateFirebaseUserFields(
+        @Path("id") id: String,
+        @Body updates: Map<String, String>
+    ): ResponseBody
 
     @GET("donors.json")
     suspend fun getFirebaseDonors(): Map<String, Donor>?

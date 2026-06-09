@@ -21,4 +21,5 @@ sealed class Screen(val route: String) {
     object EducationBookmark : Screen("education_bookmark")
     object SearchDonor : Screen("search_donor")
     object DonorForm : Screen("donor_form")
+    object ForgotPassword : Screen("forgot_password")
 }

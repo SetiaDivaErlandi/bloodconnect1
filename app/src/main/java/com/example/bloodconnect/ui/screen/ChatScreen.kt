@@ -35,7 +35,7 @@ data class Message(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(navController: NavController) {
+fun ChatScreen(navController: NavController, chatName: String = "Andi Pratama") {
 
     var messageText by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -51,7 +51,7 @@ fun ChatScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+        containerColor = MaterialTheme.colorScheme.background,
 
         topBar = {
             TopAppBar(
@@ -89,7 +89,7 @@ fun ChatScreen(navController: NavController) {
                         Column {
 
                             Text(
-                                text = "Andi Pratama",
+                                text = chatName,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -132,7 +132,7 @@ fun ChatScreen(navController: NavController) {
 
             Surface(
                 shadowElevation = 10.dp,
-                color = Color.White
+                color = MaterialTheme.colorScheme.surface
             ) {
 
                 Row(
@@ -161,13 +161,15 @@ fun ChatScreen(navController: NavController) {
                         shape = RoundedCornerShape(30.dp),
 
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFF3F3F3),
-                            unfocusedContainerColor = Color(0xFFF3F3F3),
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
 
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
 
-                            cursorColor = Color.Red
+                            cursorColor = Color.Red,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
 
@@ -223,7 +225,7 @@ fun ChatScreen(navController: NavController) {
                 shape = RoundedCornerShape(16.dp),
 
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
 
@@ -234,14 +236,15 @@ fun ChatScreen(navController: NavController) {
                     Text(
                         text = "Lokasi Saya",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         text = "RSUD Abdul Moeloek",
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp
                     )
 
@@ -258,7 +261,7 @@ fun ChatScreen(navController: NavController) {
 
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Lihat di Map")
+                        Text("Lihat di Map", color = Color.White)
                     }
                 }
             }
@@ -300,7 +303,7 @@ fun ChatBubble(message: Message) {
             color = if (message.isFromMe)
                 Color(0xFFE53935)
             else
-                Color.White,
+                MaterialTheme.colorScheme.surface,
 
             shape = RoundedCornerShape(
                 topStart = 18.dp,
@@ -324,7 +327,7 @@ fun ChatBubble(message: Message) {
                 color = if (message.isFromMe)
                     Color.White
                 else
-                    Color.Black,
+                    MaterialTheme.colorScheme.onSurface,
 
                 fontSize = 14.sp,
 
@@ -336,7 +339,7 @@ fun ChatBubble(message: Message) {
 
         Text(
             text = message.time,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 10.sp
         )
     }

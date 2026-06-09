@@ -157,8 +157,12 @@ fun BloodConnectApp() {
             composable(Screen.ChatList.route) {
                 ChatListScreen(navController)
             }
-            composable(Screen.Chat.route) {
-                ChatScreen(navController)
+            composable(
+                route = Screen.Chat.route,
+                arguments = listOf(navArgument("name") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val name = backStackEntry.arguments?.getString("name") ?: ""
+                ChatScreen(navController, name)
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(navController, authViewModel)
@@ -176,7 +180,7 @@ fun BloodConnectApp() {
                     navArgument("imageUrl") { type = NavType.StringType }
                 )
             ) { backStackEntry ->
-                val title = backStackEntry.arguments?.getString("title") ?: ""
+                val title = URLDecoder.decode(backStackEntry.arguments?.getString("title") ?: "", StandardCharsets.UTF_8.toString())
                 val imageUrl = URLDecoder.decode(backStackEntry.arguments?.getString("imageUrl") ?: "", StandardCharsets.UTF_8.toString())
                 EducationDetailScreen(navController, bloodViewModel, title, imageUrl)
             }
@@ -191,6 +195,9 @@ fun BloodConnectApp() {
             }
             composable(Screen.DonorForm.route) {
                 DonorFormScreen(navController, bloodViewModel, authViewModel)
+            }
+            composable(Screen.ForgotPassword.route) {
+                ForgotPasswordScreen(navController, authViewModel)
             }
         }
     }

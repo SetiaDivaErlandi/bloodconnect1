@@ -9,18 +9,19 @@ class AuthRepository(private val apiService: ApiService) {
     suspend fun login(email: String, password: String): UserModel? {
         val usersMap = apiService.getFirebaseUsers() ?: return null
         val matchedResponse = usersMap.values.find { 
-            it.email.trim().equals(email.trim(), ignoreCase = true) && 
-            it.password.trim() == password.trim() 
+            it.email?.trim().equals(email.trim(), ignoreCase = true) && 
+            it.password?.trim() == password.trim() 
         } ?: return null
         
         return UserModel(
-            id = matchedResponse.id,
-            name = matchedResponse.name,
-            email = matchedResponse.email,
-            bloodType = matchedResponse.bloodType,
-            location = matchedResponse.location,
-            imageUrl = matchedResponse.imageUrl,
-            phone = matchedResponse.phone
+            id = matchedResponse.id ?: "",
+            name = matchedResponse.name ?: "User",
+            email = matchedResponse.email ?: "",
+            bloodType = matchedResponse.bloodType ?: "-",
+            location = matchedResponse.location ?: "",
+            imageUrl = matchedResponse.imageUrl ?: "",
+            phone = matchedResponse.phone ?: "",
+            gender = matchedResponse.gender ?: "Laki-laki"
         )
     }
 
@@ -57,13 +58,13 @@ class AuthRepository(private val apiService: ApiService) {
         
         return UserModel(
             id = id,
-            name = userResponse.name,
-            email = userResponse.email,
-            bloodType = userResponse.bloodType,
-            location = userResponse.location,
-            imageUrl = userResponse.imageUrl,
-            phone = userResponse.phone,
-            gender = userResponse.gender
+            name = userResponse.name ?: name,
+            email = userResponse.email ?: email,
+            bloodType = userResponse.bloodType ?: bloodType,
+            location = userResponse.location ?: location,
+            imageUrl = userResponse.imageUrl ?: imageUrl,
+            phone = userResponse.phone ?: phone,
+            gender = userResponse.gender ?: gender
         )
     }
 
@@ -87,13 +88,24 @@ class AuthRepository(private val apiService: ApiService) {
         
         return UserModel(
             id = id,
-            name = updatedResponse.name,
-            email = updatedResponse.email,
-            bloodType = updatedResponse.bloodType,
-            location = updatedResponse.location,
-            imageUrl = updatedResponse.imageUrl,
-            phone = updatedResponse.phone,
-            gender = updatedResponse.gender
+            name = updatedResponse.name ?: name,
+            email = updatedResponse.email ?: "",
+            bloodType = updatedResponse.bloodType ?: "",
+            location = updatedResponse.location ?: location,
+            imageUrl = updatedResponse.imageUrl ?: imageUrl,
+            phone = updatedResponse.phone ?: phone,
+            gender = updatedResponse.gender ?: "Laki-laki"
         )
+    }
+
+    suspend fun getUserByEmailWithKey(email: String): Pair<String, UserResponse>? {
+        val usersMap = apiService.getFirebaseUsers() ?: return null
+        val entry = usersMap.entries.find { it.value.email?.trim().equals(email.trim(), ignoreCase = true) }
+        return entry?.let { it.key to it.value }
+    }
+
+    suspend fun updatePasswordOnly(key: String, newPassword: String) {
+        val updates = mapOf("password" to newPassword.trim())
+        apiService.updateFirebaseUserFields(key, updates)
     }
 }

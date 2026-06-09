@@ -50,7 +50,7 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             OutlinedTextField(
                 value = searchQuery,
@@ -63,9 +63,11 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Red,
-                    unfocusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     cursorColor = Color.Red,
-                    focusedLabelColor = Color.Red
+                    focusedLabelColor = Color.Red,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -97,7 +99,7 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                 modifier = Modifier.padding(horizontal = 16.dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
             
             Row(
@@ -128,7 +130,7 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             when (val state = bloodDataState) {
@@ -151,8 +153,9 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                         
                         items(filteredArticles) { article ->
                             ArticleCard(article) {
+                                val encodedTitle = URLEncoder.encode(article.title, StandardCharsets.UTF_8.toString())
                                 val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
-                                navController.navigate(Screen.EducationDetail.createRoute(article.title, encodedUrl))
+                                navController.navigate(Screen.EducationDetail.createRoute(encodedTitle, encodedUrl))
                             }
                         }
                     }
@@ -180,7 +183,7 @@ fun EducationCategoryItem(label: String, icon: androidx.compose.ui.graphics.vect
         Text(
             text = label, 
             fontSize = 11.sp, 
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = 6.dp), 
             fontWeight = FontWeight.Medium,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

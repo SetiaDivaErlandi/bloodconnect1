@@ -48,11 +48,11 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.Red,
                 indicator = { tabPositions ->
                     if (selectedTab < tabPositions.size) {
@@ -66,12 +66,24 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Bookmark", fontWeight = FontWeight.Bold, color = if (selectedTab == 0) Color.Red else Color.Gray) }
+                    text = { 
+                        Text(
+                            "Bookmark", 
+                            fontWeight = FontWeight.Bold, 
+                            color = if (selectedTab == 0) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                        ) 
+                    }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Riwayat Baca", fontWeight = FontWeight.Bold, color = if (selectedTab == 1) Color.Red else Color.Gray) }
+                    text = { 
+                        Text(
+                            "Riwayat Baca", 
+                            fontWeight = FontWeight.Bold, 
+                            color = if (selectedTab == 1) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                        ) 
+                    }
                 )
             }
 
@@ -94,7 +106,7 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
                                 text = if (selectedTab == 0) "Belum ada artikel yang dibookmark." else "Belum ada riwayat membaca.",
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp
                             )
                         }
@@ -106,8 +118,9 @@ fun EducationBookmarkScreen(navController: NavController, viewModel: BloodViewMo
                         ) {
                             items(filteredArticles) { article ->
                                 ArticleCard(article) {
+                                    val encodedTitle = URLEncoder.encode(article.title, StandardCharsets.UTF_8.toString())
                                     val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
-                                    navController.navigate(Screen.EducationDetail.createRoute(article.title, encodedUrl))
+                                    navController.navigate(Screen.EducationDetail.createRoute(encodedTitle, encodedUrl))
                                 }
                             }
                         }

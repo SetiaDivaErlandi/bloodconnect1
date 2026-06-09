@@ -63,6 +63,9 @@ dependencies {
     // Data Persistence
     implementation(libs.androidx.datastore.preferences)
 
+    // OpenStreetMap (OSM)
+    implementation(libs.osmdroid)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

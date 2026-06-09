@@ -1,5 +1,6 @@
 package com.example.bloodconnect.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,6 +76,7 @@ fun RegisterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -89,8 +91,16 @@ fun RegisterScreen(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        Text(text = "Create Account", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "Join us and start saving lives", color = Color.Gray)
+        Text(
+            text = "Create Account", 
+            fontSize = 20.sp, 
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Join us and start saving lives", 
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -104,7 +114,10 @@ fun RegisterScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -120,7 +133,10 @@ fun RegisterScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -136,7 +152,10 @@ fun RegisterScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -153,7 +172,10 @@ fun RegisterScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -176,7 +198,10 @@ fun RegisterScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Red,
                     focusedLabelColor = Color.Red,
-                    cursorColor = Color.Red
+                    cursorColor = Color.Red,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             ExposedDropdownMenu(
@@ -214,7 +239,10 @@ fun RegisterScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Red,
                     focusedLabelColor = Color.Red,
-                    cursorColor = Color.Red
+                    cursorColor = Color.Red,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             ExposedDropdownMenu(
@@ -245,7 +273,10 @@ fun RegisterScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -280,7 +311,10 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Already have an account? ", color = Color.Gray)
+            Text(
+                text = "Already have an account? ", 
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             TextButton(onClick = { navController.popBackStack() }) {
                 Text("LOGIN", color = Color.Red, fontWeight = FontWeight.Bold)
             }

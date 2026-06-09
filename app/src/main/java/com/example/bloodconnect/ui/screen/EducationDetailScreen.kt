@@ -1,6 +1,7 @@
 package com.example.bloodconnect.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,13 +37,14 @@ fun EducationDetailScreen(
 ) {
     val bookmarks by viewModel.bookmarks.collectAsState()
     val isBookmarked = bookmarks.contains(title)
+    val isDark = isSystemInDarkTheme()
 
     LaunchedEffect(title) {
         viewModel.addArticleToHistory(title)
     }
 
     Scaffold(
-        containerColor = Color(0xFFF8F8F8),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -79,7 +81,7 @@ fun EducationDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFE53935)
+                    containerColor = Color.Red
                 )
             )
         }
@@ -112,7 +114,7 @@ fun EducationDetailScreen(
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 34.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -125,7 +127,7 @@ fun EducationDetailScreen(
                         modifier = Modifier
                             .size(34.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFE53935)),
+                            .background(Color.Red),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -142,13 +144,13 @@ fun EducationDetailScreen(
                             text = "BloodConnect Team",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Text(
                             text = "5 menit baca",
                             fontSize = 12.sp,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -159,7 +161,7 @@ fun EducationDetailScreen(
                     text = "Manfaat Donor Darah",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -168,7 +170,7 @@ fun EducationDetailScreen(
                     text = "Donor darah bukan hanya membantu menyelamatkan nyawa orang lain, tetapi juga memiliki banyak manfaat untuk kesehatan tubuh Anda.",
                     fontSize = 16.sp,
                     lineHeight = 28.sp,
-                    color = Color.DarkGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(18.dp))
@@ -183,7 +185,7 @@ fun EducationDetailScreen(
                 Card(
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFF3E0)
+                        containerColor = if (isDark) Color(0xFF3E2723) else Color(0xFFFFF3E0)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -196,7 +198,7 @@ fun EducationDetailScreen(
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Info",
-                            tint = Color(0xFFF57C00)
+                            tint = if (isDark) Color(0xFFFFB74D) else Color(0xFFF57C00)
                         )
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -205,7 +207,7 @@ fun EducationDetailScreen(
                             text = "Donor darah rutin setiap 3 bulan sekali dapat membantu menjaga kesehatan tubuh dan meningkatkan regenerasi sel darah.",
                             fontSize = 14.sp,
                             lineHeight = 22.sp,
-                            color = Color(0xFFE65100)
+                            color = if (isDark) Color(0xFFFFE0B2) else Color(0xFFE65100)
                         )
                     }
                 }
@@ -216,7 +218,7 @@ fun EducationDetailScreen(
                     text = "Sumber Terpercaya",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -226,7 +228,7 @@ fun EducationDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(14.dp)
                 ) {
 
@@ -243,7 +245,7 @@ fun EducationDetailScreen(
                         text = "Palang Merah Indonesia (PMI)",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -274,7 +276,7 @@ fun BenefitItem(text: String) {
             text = text,
             fontSize = 15.sp,
             lineHeight = 24.sp,
-            color = Color.DarkGray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

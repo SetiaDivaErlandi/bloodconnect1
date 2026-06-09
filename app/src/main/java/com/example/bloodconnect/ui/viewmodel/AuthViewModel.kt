@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bloodconnect.data.model.UserModel
 import com.example.bloodconnect.data.local.UserPreferences
+import com.example.bloodconnect.data.model.UserResponse
 import com.example.bloodconnect.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,8 @@ sealed class AuthState {
     object Loading : AuthState()
     data class Success(val user: UserModel) : AuthState()
     data class Error(val message: String) : AuthState()
+    data class EmailFound(val key: String, val user: UserResponse) : AuthState()
+    object PasswordResetSuccess : AuthState()
 }
 
 class AuthViewModel(
@@ -104,6 +107,10 @@ class AuthViewModel(
                     location = location,
                     gender = gender
                 )
+                
+                // PERBAIKAN: Simpan session user baru agar dashboard tidak kosong
+                userPreferences.saveLoginSession(newUser)
+
                 _authState.value = AuthState.Success(newUser)
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(
@@ -140,6 +147,34 @@ class AuthViewModel(
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    fun checkEmail(email: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                val result = authRepository.getUserByEmailWithKey(email)
+                if (result != null) {
+                    _authState.value = AuthState.EmailFound(result.first, result.second)
+                } else {
+                    _authState.value = AuthState.Error("Email tidak terdaftar")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Terjadi kesalahan: ${e.message}")
+            }
+        }
+    }
+
+    fun resetPassword(key: String, newPassword: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                authRepository.updatePasswordOnly(key, newPassword)
+                _authState.value = AuthState.PasswordResetSuccess
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Gagal mereset password: ${e.message}")
             }
         }
     }

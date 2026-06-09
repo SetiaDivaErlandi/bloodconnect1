@@ -1,5 +1,6 @@
 package com.example.bloodconnect.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -10,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -41,6 +41,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -54,8 +55,16 @@ fun LoginScreen(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        Text(text = "Welcome Back!", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = "Login to continue", color = Color.Gray)
+        Text(
+            text = "Welcome Back!", 
+            fontSize = 20.sp, 
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Login to continue", 
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -69,7 +78,10 @@ fun LoginScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -86,7 +98,10 @@ fun LoginScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Red,
                 focusedLabelColor = Color.Red,
-                cursorColor = Color.Red
+                cursorColor = Color.Red,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -101,7 +116,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(
-            onClick = { /* Handle forgot password */ },
+            onClick = { navController.navigate(Screen.ForgotPassword.route) },
             modifier = Modifier.align(Alignment.End)
         ) {
             Text("Forgot Password?", color = Color.Red)
@@ -126,7 +141,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Don't have an account? ", color = Color.Gray)
+            Text("Don't have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
                 Text("REGISTER", color = Color.Red, fontWeight = FontWeight.Bold)
             }

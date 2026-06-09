@@ -38,12 +38,21 @@ fun EducationStepsScreen(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            Text(text = "Langkah demi Langkah", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            Text(text = "Pahami tahapan proses donor darah.", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
+            Text(
+                text = "Langkah demi Langkah", 
+                fontSize = 22.sp, 
+                fontWeight = FontWeight.Bold, 
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "Pahami tahapan proses donor darah.", 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                modifier = Modifier.padding(top = 8.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -67,10 +76,19 @@ fun DonorStep(number: Int, title: String, description: String) {
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
-            Text(text = description, color = Color.Gray, fontSize = 14.sp)
+            Text(
+                text = title, 
+                fontWeight = FontWeight.Bold, 
+                fontSize = 16.sp, 
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                fontSize = 14.sp
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(thickness = 0.5.dp)
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
 }

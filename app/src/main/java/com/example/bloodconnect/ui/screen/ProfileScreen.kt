@@ -154,7 +154,7 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) {
-                    Text("Batal", color = Color.Gray)
+                    Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -176,16 +176,14 @@ fun ProfileScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Notifikasi", fontWeight = FontWeight.Bold)
-                            Text("Dapatkan pemberitahuan SOS terdekat", fontSize = 12.sp, color = Color.Gray)
+                            Text("Dapatkan pemberitahuan SOS terdekat", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(
                             checked = isNotificationEnabled,
                             onCheckedChange = { isNotificationEnabled = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = Color.Red,
-                                uncheckedThumbColor = Color.Gray,
-                                uncheckedTrackColor = Color.LightGray
+                                checkedTrackColor = Color.Red
                             )
                         )
                     }
@@ -196,16 +194,14 @@ fun ProfileScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Mode Gelap", fontWeight = FontWeight.Bold)
-                            Text("Gunakan tema gelap untuk aplikasi", fontSize = 12.sp, color = Color.Gray)
+                            Text("Gunakan tema gelap untuk aplikasi", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(
                             checked = isDarkModeEnabled,
                             onCheckedChange = { authViewModel.setDarkMode(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = Color.Red,
-                                uncheckedThumbColor = Color.Gray,
-                                uncheckedTrackColor = Color.LightGray
+                                checkedTrackColor = Color.Red
                             )
                         )
                     }
@@ -237,16 +233,6 @@ fun ProfileScreen(
                         text = "BloodConnect adalah platform sosial kemanusiaan yang menghubungkan pendonor darah dengan mereka yang membutuhkan secara real-time berdasarkan lokasi terdekat.",
                         fontSize = 14.sp
                     )
-                    Text(
-                        text = "Fitur Utama:",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = Color.Red
-                    )
-                    Text(
-                        text = "• Pencarian Pendonor Terdekat via Peta\n• Fitur Darurat SOS Instan\n• Artikel & Edukasi Kesehatan\n• Riwayat & Pengingat Donor",
-                        fontSize = 13.sp
-                    )
                 }
             },
             confirmButton = {
@@ -271,15 +257,7 @@ fun ProfileScreen(
                 ) {
                     Column {
                         Text("1. Bagaimana cara mendonorkan darah?", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text("Anda dapat menemukan permintaan SOS di menu SOS, lalu menekan tombol 'Hubungi' untuk berkomunikasi.", fontSize = 12.sp, color = Color.Gray)
-                    }
-                    Column {
-                        Text("2. Apa itu fitur SOS?", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text("Fitur SOS digunakan saat Anda atau kerabat membutuhkan bantuan darah darurat. Semua pendonor terdekat akan mendapatkan notifikasi.", fontSize = 12.sp, color = Color.Gray)
-                    }
-                    Column {
-                        Text("3. Hubungi Kami", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.Red)
-                        Text("Email: support@bloodconnect.com\nTelepon: +62 812-3456-7890", fontSize = 12.sp, color = Color.Gray)
+                        Text("Anda dapat menemukan permintaan SOS di menu SOS, lalu menekan tombol 'Hubungi' untuk berkomunikasi.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             },
@@ -297,7 +275,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
+            .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -381,7 +359,7 @@ fun ProfileScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             ProfileMenuItem("Edit Profil", Icons.Default.Edit) {
                 editName = userData?.name ?: ""
@@ -390,15 +368,15 @@ fun ProfileScreen(
                 editImageUrl = userData?.imageUrl ?: ""
                 showEditDialog = true
             }
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
             ProfileMenuItem("Pengaturan", Icons.Default.Settings) {
                 showSettingsDialog = true
             }
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
             ProfileMenuItem("Tentang Aplikasi", Icons.Default.Info) {
                 showAboutDialog = true
             }
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
             ProfileMenuItem("Bantuan", Icons.AutoMirrored.Filled.Help) {
                 showHelpDialog = true
             }
@@ -431,7 +409,7 @@ fun ProfileScreen(
 fun ProfileStatCard(label: String, value: String) {
     Card(
         modifier = Modifier.width(150.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -439,7 +417,7 @@ fun ProfileStatCard(label: String, value: String) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Red)
-            Text(text = label, fontSize = 12.sp, color = Color.Gray)
+            Text(text = label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -458,8 +436,13 @@ fun ProfileMenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
         ) {
             Icon(icon, contentDescription = null, tint = Color.Red)
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+            Text(
+                text = label, 
+                modifier = Modifier.weight(1f), 
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
