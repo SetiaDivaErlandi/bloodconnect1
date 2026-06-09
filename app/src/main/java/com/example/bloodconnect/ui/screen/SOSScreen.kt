@@ -29,6 +29,37 @@ fun SOSScreen(navController: NavController) {
 
     val bloodTypes = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
     var expanded by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = { Text("SOS Alert Dikirim!", fontWeight = FontWeight.Bold) },
+            text = { Text("Permintaan bantuan darah darurat Anda untuk Golongan Darah $bloodType sebanyak $quantity kantong di $location telah berhasil disebarkan ke pendonor terdekat.") },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showSuccessDialog = false
+                    navController.popBackStack()
+                }) {
+                    Text("OK", color = Color.Red)
+                }
+            }
+        )
+    }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text("Input Tidak Lengkap", fontWeight = FontWeight.Bold) },
+            text = { Text("Silakan masukkan Lokasi / Rumah Sakit terlebih dahulu sebelum mengirim SOS Alert.") },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text("OK", color = Color.Red)
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -137,8 +168,11 @@ fun SOSScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // Handle SOS alert
-                    navController.popBackStack()
+                    if (location.isNotBlank()) {
+                        showSuccessDialog = true
+                    } else {
+                        showErrorDialog = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),

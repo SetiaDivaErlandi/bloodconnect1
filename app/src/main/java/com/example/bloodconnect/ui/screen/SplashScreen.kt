@@ -3,7 +3,8 @@ package com.example.bloodconnect.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.ui.res.painterResource
+import com.example.bloodconnect.R
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,9 +45,9 @@ fun SplashScreen(navController: NavController, isLoggedIn: Boolean) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Default.WaterDrop,
+                painter = painterResource(id = R.drawable.ic_logo_droplet),
                 contentDescription = null,
-                tint = Color.White,
+                tint = Color.Unspecified,
                 modifier = Modifier.size(100.dp)
             )
             Text(
