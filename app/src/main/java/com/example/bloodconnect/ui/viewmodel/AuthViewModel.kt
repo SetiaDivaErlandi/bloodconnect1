@@ -37,7 +37,6 @@ class AuthViewModel(
             _authState.value = AuthState.Loading
             val trimmedEmail = email.trim()
             val trimmedPassword = password.trim()
-            
             try {
                 val user = authRepository.login(trimmedEmail, trimmedPassword)
                 if (user != null) {
@@ -76,6 +75,25 @@ class AuthViewModel(
         viewModelScope.launch {
             userPreferences.clearSession()
             _authState.value = AuthState.Idle
+        }
+    }
+
+    fun updateProfile(name: String, phone: String, location: String) {
+        val currentUser = userData.value ?: return
+        viewModelScope.launch {
+            try {
+                val updatedUser = authRepository.updateProfile(
+                    id = currentUser.id,
+                    name = name,
+                    phone = phone,
+                    location = location
+                )
+                if (updatedUser != null) {
+                    userPreferences.saveLoginSession(updatedUser)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

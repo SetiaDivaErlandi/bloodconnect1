@@ -42,6 +42,18 @@ fun ProfileScreen(
     var dialogTitle by remember { mutableStateOf("") }
     var dialogMessage by remember { mutableStateOf("") }
 
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editName by remember { mutableStateOf("") }
+    var editPhone by remember { mutableStateOf("") }
+    var editLocation by remember { mutableStateOf("") }
+
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    var isNotificationEnabled by remember { mutableStateOf(true) }
+    var isDarkModeEnabled by remember { mutableStateOf(false) }
+
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
+
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -50,6 +62,206 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) {
                     Text("OK", color = Color.Red)
+                }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Profil", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Nama Lengkap") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            focusedLabelColor = Color.Red,
+                            cursorColor = Color.Red
+                        )
+                    )
+                    OutlinedTextField(
+                        value = editPhone,
+                        onValueChange = { editPhone = it },
+                        label = { Text("Nomor Telepon") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            focusedLabelColor = Color.Red,
+                            cursorColor = Color.Red
+                        )
+                    )
+                    OutlinedTextField(
+                        value = editLocation,
+                        onValueChange = { editLocation = it },
+                        label = { Text("Lokasi") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            focusedLabelColor = Color.Red,
+                            cursorColor = Color.Red
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        authViewModel.updateProfile(editName, editPhone, editLocation)
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Simpan", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("Batal", color = Color.Gray)
+                }
+            }
+        )
+    }
+
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text("Pengaturan", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Notifikasi", fontWeight = FontWeight.Bold)
+                            Text("Dapatkan pemberitahuan SOS terdekat", fontSize = 12.sp, color = Color.Gray)
+                        }
+                        Switch(
+                            checked = isNotificationEnabled,
+                            onCheckedChange = { isNotificationEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color.Red,
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray
+                            )
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Mode Gelap", fontWeight = FontWeight.Bold)
+                            Text("Gunakan tema gelap untuk aplikasi", fontSize = 12.sp, color = Color.Gray)
+                        }
+                        Switch(
+                            checked = isDarkModeEnabled,
+                            onCheckedChange = { isDarkModeEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color.Red,
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray
+                            )
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showSettingsDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Selesai", color = Color.White)
+                }
+            }
+        )
+    }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            title = { Text("Tentang Aplikasi", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "BloodConnect v1.0.0",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "BloodConnect adalah platform sosial kemanusiaan yang menghubungkan pendonor darah dengan mereka yang membutuhkan secara real-time berdasarkan lokasi terdekat.",
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "Fitur Utama:",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = Color.Red
+                    )
+                    Text(
+                        text = "• Pencarian Pendonor Terdekat via Peta\n• Fitur Darurat SOS Instan\n• Artikel & Edukasi Kesehatan\n• Riwayat & Pengingat Donor",
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showAboutDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Tutup", color = Color.White)
+                }
+            }
+        )
+    }
+
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = { Text("Bantuan & FAQ", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        Text("1. Bagaimana cara mendonorkan darah?", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Anda dapat menemukan permintaan SOS di menu SOS, lalu menekan tombol 'Hubungi' untuk berkomunikasi.", fontSize = 12.sp, color = Color.Gray)
+                    }
+                    Column {
+                        Text("2. Apa itu fitur SOS?", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Fitur SOS digunakan saat Anda atau kerabat membutuhkan bantuan darah darurat. Semua pendonor terdekat akan mendapatkan notifikasi.", fontSize = 12.sp, color = Color.Gray)
+                    }
+                    Column {
+                        Text("3. Hubungi Kami", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.Red)
+                        Text("Email: support@bloodconnect.com\nTelepon: +62 812-3456-7890", fontSize = 12.sp, color = Color.Gray)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showHelpDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Mengerti", color = Color.White)
                 }
             }
         )
@@ -145,27 +357,22 @@ fun ProfileScreen(
                 .background(Color.White)
         ) {
             ProfileMenuItem("Edit Profil", Icons.Default.Edit) {
-                dialogTitle = "Edit Profil"
-                dialogMessage = "Fitur pengeditan profil akan segera hadir!"
-                showDialog = true
+                editName = userData?.name ?: ""
+                editPhone = userData?.phone ?: ""
+                editLocation = userData?.location ?: ""
+                showEditDialog = true
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             ProfileMenuItem("Pengaturan", Icons.Default.Settings) {
-                dialogTitle = "Pengaturan"
-                dialogMessage = "Pengaturan aplikasi akan segera hadir!"
-                showDialog = true
+                showSettingsDialog = true
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             ProfileMenuItem("Tentang Aplikasi", Icons.Default.Info) {
-                dialogTitle = "Tentang Aplikasi"
-                dialogMessage = "BloodConnect v1.0.0\nMenghubungkan pendonor darah terdekat untuk menyelamatkan nyawa."
-                showDialog = true
+                showAboutDialog = true
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             ProfileMenuItem("Bantuan", Icons.AutoMirrored.Filled.Help) {
-                dialogTitle = "Bantuan"
-                dialogMessage = "Butuh bantuan?\nHubungi kami di support@bloodconnect.com atau kirim pesan SOS di tab SOS."
-                showDialog = true
+                showHelpDialog = true
             }
         }
 

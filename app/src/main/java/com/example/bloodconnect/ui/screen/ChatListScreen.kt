@@ -34,9 +34,9 @@ data class ChatPreview(
 @Composable
 fun ChatListScreen(navController: NavController) {
     val chatHistory = listOf(
-        ChatPreview("1", "Andi Pratama", "Oke, saya segera meluncur!", "10:35", "https://api.dicebear.com/7.x/avataaars/svg?seed=Andi"),
-        ChatPreview("2", "Sinta Amelia", "Terima kasih banyak kak.", "Yesterday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Sinta"),
-        ChatPreview("3", "Rido Putra", "Bisa kirim lokasi detailnya?", "Monday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Rido")
+        ChatPreview("1", "Andi Pratama", "Oke, saya segera meluncur!", "10:35", "https://api.dicebear.com/7.x/avataaars/svg?seed=Andi&eyes=default&mouth=smile&eyebrowType=default"),
+        ChatPreview("2", "Sinta Amelia", "Terima kasih banyak kak.", "Yesterday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Sinta&eyes=default&mouth=smile&eyebrowType=default"),
+        ChatPreview("3", "Rido Putra", "Bisa kirim lokasi detailnya?", "Monday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Rido&eyes=default&mouth=smile&eyebrowType=default")
     )
 
     Scaffold(

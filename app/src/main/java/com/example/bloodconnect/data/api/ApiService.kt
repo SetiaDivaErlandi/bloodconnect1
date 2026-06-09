@@ -2,6 +2,8 @@ package com.example.bloodconnect.data.api
 
 import com.example.bloodconnect.data.model.BloodDataResponse
 import com.example.bloodconnect.data.model.UserResponse
+import com.example.bloodconnect.data.model.Donor
+import com.example.bloodconnect.data.model.Article
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -25,4 +27,22 @@ interface ApiService {
         @Path("id") id: String,
         @Body user: UserResponse
     ): UserResponse
+
+    @GET("donors.json")
+    suspend fun getFirebaseDonors(): Map<String, Donor>?
+
+    @PUT("donors/{id}.json")
+    suspend fun saveFirebaseDonor(
+        @Path("id") id: String,
+        @Body donor: Donor
+    ): Donor
+
+    @GET("articles.json")
+    suspend fun getFirebaseArticles(): Map<String, Article>?
+
+    @PUT("articles/{id}.json")
+    suspend fun saveFirebaseArticle(
+        @Path("id") id: String,
+        @Body article: Article
+    ): Article
 }

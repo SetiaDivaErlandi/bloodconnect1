@@ -27,6 +27,7 @@ import com.example.bloodconnect.data.model.Donor
 fun SectionTitle(title: String) {
     Text(
         text = title,
+        color = Color.Black,
         modifier = Modifier.padding(16.dp),
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp

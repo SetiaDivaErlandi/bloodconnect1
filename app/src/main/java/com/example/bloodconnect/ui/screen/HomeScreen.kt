@@ -63,6 +63,7 @@ fun HomeScreen(
         item {
             Text(
                 text = "Menu Utama",
+                color = Color.Black,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
@@ -80,6 +81,7 @@ fun HomeScreen(
             ) {
                 Text(
                     text = "Donor Terdekat",
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -118,7 +120,30 @@ fun HomeScreen(
         }
 
         item {
-            SectionTitle("Edukasi Terbaru")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Edukasi Terbaru",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+                Text(
+                    text = "Lihat Semua",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .clickable { navController.navigate(Screen.Education.route) }
+                )
+            }
         }
 
         item {
@@ -248,6 +273,7 @@ fun MenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
         }
         Text(
             text = label, 
+            color = Color.Black,
             fontSize = 11.sp, 
             modifier = Modifier.padding(top = 8.dp), 
             fontWeight = FontWeight.Medium,
@@ -274,7 +300,7 @@ fun DonorCard(donor: Donor, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(text = donor.name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(text = donor.name, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
                         Text(text = donor.location, fontSize = 11.sp, color = Color.Gray)
