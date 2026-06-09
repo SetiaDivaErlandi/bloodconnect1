@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.bloodconnect.data.remote.Donor
+import com.example.bloodconnect.data.model.Donor
 import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.BloodViewModel
 import com.example.bloodconnect.ui.viewmodel.UiState

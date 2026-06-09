@@ -1,8 +1,8 @@
 package com.example.bloodconnect.data.repository
 
-import com.example.bloodconnect.data.remote.ApiService
-import com.example.bloodconnect.data.remote.BloodDataResponse
-import com.example.bloodconnect.data.remote.UserResponse
+import com.example.bloodconnect.data.api.ApiService
+import com.example.bloodconnect.data.model.BloodDataResponse
+import com.example.bloodconnect.data.model.UserResponse
 
 class BloodRepository(
     private val apiService: ApiService

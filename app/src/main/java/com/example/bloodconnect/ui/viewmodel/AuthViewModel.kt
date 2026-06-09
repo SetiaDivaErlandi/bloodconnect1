@@ -2,13 +2,12 @@ package com.example.bloodconnect.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bloodconnect.data.local.UserModel
+import com.example.bloodconnect.data.model.UserModel
 import com.example.bloodconnect.data.local.UserPreferences
-import com.example.bloodconnect.data.repository.BloodRepository
+import com.example.bloodconnect.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -20,7 +19,7 @@ sealed class AuthState {
 }
 
 class AuthViewModel(
-    private val repository: BloodRepository,
+    private val authRepository: AuthRepository,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
@@ -40,46 +39,15 @@ class AuthViewModel(
             val trimmedPassword = password.trim()
             
             try {
-                // 1. Check local registered user first (High priority for simulation)
-                val regUser = userPreferences.registeredUser.first()
-                if (regUser["email"] == trimmedEmail && regUser["password"] == trimmedPassword) {
-                    val userModel = UserModel(
-                        id = "local_user",
-                        name = regUser["name"] ?: "User",
-                        email = regUser["email"] ?: "",
-                        bloodType = regUser["bloodType"] ?: "O+",
-                        location = regUser["location"] ?: "Lampung",
-                        imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=${regUser["name"]}",
-                        phone = regUser["phone"] ?: ""
-                    )
-                    userPreferences.saveLoginSession(userModel)
-                    _authState.value = AuthState.Success(userModel)
-                    return@launch
-                }
-
-                // 2. Fallback to Remote API
-                val users = repository.getUsers()
-                val user = users.find { it.email.trim() == trimmedEmail && it.password.trim() == trimmedPassword }
-                
+                val user = authRepository.login(trimmedEmail, trimmedPassword)
                 if (user != null) {
-                    val userModel = UserModel(
-                        id = user.id,
-                        name = user.name,
-                        email = user.email,
-                        bloodType = user.bloodType,
-                        location = user.location,
-                        imageUrl = user.imageUrl,
-                        phone = user.phone
-                    )
-                    userPreferences.saveLoginSession(userModel)
-                    _authState.value = AuthState.Success(userModel)
+                    userPreferences.saveLoginSession(user)
+                    _authState.value = AuthState.Success(user)
                 } else {
-                    _authState.value = AuthState.Error("Email atau Password salah.")
+                    _authState.value = AuthState.Error("Login gagal: Akun tidak ditemukan.")
                 }
             } catch (e: Exception) {
-                // If API fails but user exists locally, we already handled it above.
-                // If we reach here, it means both failed.
-                _authState.value = AuthState.Error("Login gagal: Akun tidak ditemukan.")
+                _authState.value = AuthState.Error(e.message ?: "Login gagal: Terjadi kesalahan jaringan.")
             }
         }
     }
@@ -87,23 +55,20 @@ class AuthViewModel(
     fun register(name: String, email: String, phone: String, password: String, bloodType: String, location: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            
-            val newUser = UserModel(
-                id = "local_${System.currentTimeMillis()}",
-                name = name.trim(),
-                email = email.trim(),
-                bloodType = bloodType,
-                location = location,
-                imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=$name",
-                phone = phone.trim()
-            )
-            
-            // Persist locally so login works after logout
-            userPreferences.saveRegisteredUser(newUser, password.trim())
-            // Set current session
-            userPreferences.saveLoginSession(newUser)
-
-            _authState.value = AuthState.Success(newUser)
+            try {
+                val newUser = authRepository.register(
+                    name = name,
+                    email = email,
+                    phone = phone,
+                    password = password,
+                    bloodType = bloodType,
+                    location = location
+                )
+                userPreferences.saveLoginSession(newUser)
+                _authState.value = AuthState.Success(newUser)
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Registrasi gagal: Terjadi kesalahan.")
+            }
         }
     }
 

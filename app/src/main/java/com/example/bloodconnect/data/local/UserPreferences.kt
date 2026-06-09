@@ -4,21 +4,12 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.bloodconnect.data.model.UserModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
 
-data class UserModel(
-    val id: String,
-    val name: String,
-    val email: String,
-    val bloodType: String,
-    val location: String,
-    val imageUrl: String,
-    val phone: String,
-    val password: String = ""
-)
 
 class UserPreferences(private val context: Context) {
 

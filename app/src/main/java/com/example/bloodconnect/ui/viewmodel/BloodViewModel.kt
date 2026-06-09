@@ -2,7 +2,7 @@ package com.example.bloodconnect.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bloodconnect.data.remote.BloodDataResponse
+import com.example.bloodconnect.data.model.BloodDataResponse
 import com.example.bloodconnect.data.repository.BloodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

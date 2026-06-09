@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.bloodconnect.data.remote.Article
-import com.example.bloodconnect.data.remote.Donor
+import com.example.bloodconnect.data.model.Article
+import com.example.bloodconnect.data.model.Donor
 
 @Composable
 fun SectionTitle(title: String) {
