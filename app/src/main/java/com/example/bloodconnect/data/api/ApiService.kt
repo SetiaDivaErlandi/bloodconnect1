@@ -7,11 +7,8 @@ import com.example.bloodconnect.data.model.Article
 import com.example.bloodconnect.data.model.SosRequestResponse
 import com.example.bloodconnect.data.model.DonationResponse
 import okhttp3.ResponseBody
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.PATCH
-import retrofit2.http.PUT
-import retrofit2.http.Path
+import retrofit2.Response
+import retrofit2.http.*
 
 interface ApiService {
 
@@ -59,6 +56,23 @@ interface ApiService {
 
     @PUT("sos_requests/{id}.json")
     suspend fun saveFirebaseSosRequest(
+        @Path("id") id: String,
+        @Body request: SosRequestResponse
+    ): SosRequestResponse
+
+    @DELETE("sos_requests/{id}.json")
+    suspend fun deleteFirebaseSosRequest(
+        @Path("id") id: String
+    ): Response<Unit>
+
+    @GET("sos_history/{userId}.json")
+    suspend fun getFirebaseSosHistory(
+        @Path("userId") userId: String
+    ): Map<String, SosRequestResponse>?
+
+    @PUT("sos_history/{userId}/{id}.json")
+    suspend fun saveFirebaseSosHistory(
+        @Path("userId") userId: String,
         @Path("id") id: String,
         @Body request: SosRequestResponse
     ): SosRequestResponse

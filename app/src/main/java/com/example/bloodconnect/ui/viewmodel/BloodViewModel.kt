@@ -26,6 +26,9 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
     private val _sosRequests = MutableStateFlow<UiState<List<SosRequestResponse>>>(UiState.Loading)
     val sosRequests: StateFlow<UiState<List<SosRequestResponse>>> = _sosRequests
 
+    private val _sosHistory = MutableStateFlow<UiState<List<SosRequestResponse>>>(UiState.Loading)
+    val sosHistory: StateFlow<UiState<List<SosRequestResponse>>> = _sosHistory
+
     private val _donations = MutableStateFlow<UiState<List<DonationResponse>>>(UiState.Loading)
     val donations: StateFlow<UiState<List<DonationResponse>>> = _donations
 
@@ -37,7 +40,6 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
 
     init {
         fetchBloodData()
-        fetchSosRequests()
     }
 
     fun fetchBloodData() {
@@ -58,12 +60,21 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
         }
     }
 
-    fun fetchSosRequests() {
+    /**
+     * Mengambil data SOS dan melakukan filtering berdasarkan userId.
+     * Jika currentUserId diberikan, hanya menampilkan SOS milik user tersebut.
+     */
+    fun fetchSosRequests(currentUserId: String? = null) {
         viewModelScope.launch {
             _sosRequests.value = UiState.Loading
             try {
-                val list = repository.getSosRequests()
-                _sosRequests.value = UiState.Success(list)
+                val allRequests = repository.getSosRequests()
+                val filteredList = if (currentUserId != null) {
+                    allRequests.filter { it.requesterId == currentUserId }
+                } else {
+                    allRequests
+                }
+                _sosRequests.value = UiState.Success(filteredList)
             } catch (e: Exception) {
                 _sosRequests.value = UiState.Error(
                     if (e is java.io.IOException || e is java.net.UnknownHostException) {
@@ -81,13 +92,54 @@ class BloodViewModel(private val repository: BloodRepository) : ViewModel() {
             try {
                 val result = repository.saveSosRequest(request)
                 if (result) {
-                    fetchSosRequests()
+                    fetchSosRequests(request.requesterId)
                     onSuccess()
                 } else {
                     onError("Gagal mengirim SOS Alert.")
                 }
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal mengirim SOS Alert.")
+            }
+        }
+    }
+
+    fun deleteSosRequest(id: String, currentUserId: String?, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.deleteSosRequest(id)
+                if (result) {
+                    fetchSosRequests(currentUserId)
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun completeSosRequest(request: SosRequestResponse, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.completeSosRequest(request)
+                if (result) {
+                    fetchSosRequests(request.requesterId)
+                    fetchSosHistory(request.requesterId)
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun fetchSosHistory(userId: String) {
+        viewModelScope.launch {
+            _sosHistory.value = UiState.Loading
+            try {
+                val list = repository.getSosHistory(userId)
+                _sosHistory.value = UiState.Success(list)
+            } catch (e: Exception) {
+                _sosHistory.value = UiState.Error("Gagal memuat riwayat SOS")
             }
         }
     }

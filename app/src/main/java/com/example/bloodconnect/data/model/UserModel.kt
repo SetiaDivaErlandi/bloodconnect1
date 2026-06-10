@@ -34,7 +34,8 @@ data class SosRequestResponse(
     @SerializedName("quantity") val quantity: Int,
     @SerializedName("notes") val notes: String,
     @SerializedName("timestamp") val timestamp: Long,
-    @SerializedName("requesterPhone") val requesterPhone: String = ""
+    @SerializedName("requesterPhone") val requesterPhone: String = "",
+    @SerializedName("requesterId") val requesterId: String = ""
 )
 
 data class DonationResponse(

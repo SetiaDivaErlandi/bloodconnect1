@@ -2,6 +2,8 @@ package com.example.bloodconnect.ui.screen
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -34,6 +33,8 @@ import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 import com.example.bloodconnect.ui.viewmodel.BloodViewModel
 import com.example.bloodconnect.ui.viewmodel.UiState
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +45,7 @@ fun SOSScreen(
 ) {
     val userData by authViewModel.userData.collectAsState()
     val sosRequestsState by bloodViewModel.sosRequests.collectAsState()
+    val sosHistoryState by bloodViewModel.sosHistory.collectAsState()
     
     var selectedTab by remember { mutableIntStateOf(0) }
     
@@ -55,37 +57,27 @@ fun SOSScreen(
     val bloodTypes = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
     var expanded by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        bloodViewModel.fetchSosRequests()
+    LaunchedEffect(userData?.id, selectedTab) {
+        if (selectedTab == 1) {
+            bloodViewModel.fetchSosRequests(userData?.id)
+        } else if (selectedTab == 2) {
+            userData?.id?.let { bloodViewModel.fetchSosHistory(it) }
+        }
     }
 
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },
             title = { Text("SOS Alert Dikirim!", fontWeight = FontWeight.Bold, color = Color.Red) },
-            text = { Text("Permintaan bantuan darah darurat Anda untuk Golongan Darah $bloodType sebanyak $quantity kantong di $location telah berhasil disebarkan ke pendonor terdekat.") },
+            text = { Text("Permintaan bantuan darah darurat Anda telah berhasil disebarkan ke pendonor terdekat.") },
             confirmButton = {
                 TextButton(onClick = { 
                     showSuccessDialog = false
                     selectedTab = 1
                 }) {
-                    Text("OK", color = Color.Red)
-                }
-            }
-        )
-    }
-
-    if (showErrorDialog) {
-        AlertDialog(
-            onDismissRequest = { showErrorDialog = false },
-            title = { Text("Input Tidak Lengkap", fontWeight = FontWeight.Bold) },
-            text = { Text("Silakan masukkan Lokasi / Rumah Sakit terlebih dahulu sebelum mengirim SOS Alert.") },
-            confirmButton = {
-                TextButton(onClick = { showErrorDialog = false }) {
-                    Text("OK", color = Color.Red)
+                    Text("LIHAT SOS SAYA", color = Color.Red)
                 }
             }
         )
@@ -126,209 +118,168 @@ fun SOSScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Minta Bantuan (SOS)", fontWeight = FontWeight.Bold) }
+                    text = { Text("Minta", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Permintaan SOS", fontWeight = FontWeight.Bold) }
+                    text = { Text("SOS Saya", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text("Riwayat", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
                 )
             }
 
-            if (selectedTab == 0) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Butuh Darah Darurat?",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Kirim permintaan bantuan ke pendonor terdekat.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.fillMaxWidth()
+            when (selectedTab) {
+                0 -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        OutlinedTextField(
-                            value = bloodType,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Golongan Darah Dibutuhkan") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Red,
-                                focusedLabelColor = Color.Red,
-                                cursorColor = Color.Red,
-                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                        ExposedDropdownMenu(
+                        Text(text = "Butuh Darah Darurat?", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            bloodTypes.forEach { type ->
-                                DropdownMenuItem(
-                                    text = { Text(type) },
-                                    onClick = {
-                                        bloodType = type
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = location,
-                        onValueChange = { location = it },
-                        label = { Text("Lokasi / Rumah Sakit") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Red,
-                            focusedLabelColor = Color.Red,
-                            cursorColor = Color.Red,
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Jumlah Kantong Darah", 
-                            fontWeight = FontWeight.Medium, 
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { if (quantity > 1) quantity-- }) {
-                                Icon(Icons.Default.Remove, contentDescription = null, tint = Color.Red)
-                            }
-                            Text(
-                                text = quantity.toString(), 
-                                fontSize = 18.sp, 
-                                fontWeight = FontWeight.Bold, 
-                                color = MaterialTheme.colorScheme.onBackground, 
-                                modifier = Modifier.padding(horizontal = 8.dp)
+                            OutlinedTextField(
+                                value = bloodType,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Golongan Darah") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.Red, focusedLabelColor = Color.Red)
                             )
-                            IconButton(onClick = { quantity++ }) {
-                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.Red)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("Catatan (Opsional)") },
-                        modifier = Modifier.fillMaxWidth().height(120.dp),
-                        placeholder = { Text("Masukkan catatan jika ada...") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Red,
-                            focusedLabelColor = Color.Red,
-                            cursorColor = Color.Red,
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(40.dp))
-
-                    Button(
-                        onClick = {
-                            if (location.isNotBlank()) {
-                                val sosReq = SosRequestResponse(
-                                    id = "sos_${System.currentTimeMillis()}",
-                                    requesterName = userData?.name ?: "User",
-                                    bloodType = bloodType,
-                                    location = location,
-                                    quantity = quantity,
-                                    notes = notes,
-                                    timestamp = System.currentTimeMillis(),
-                                    requesterPhone = userData?.phone ?: "08123456789"
-                                )
-                                bloodViewModel.sendSosRequest(
-                                    request = sosReq,
-                                    onSuccess = {
-                                        showSuccessDialog = true
-                                    },
-                                    onError = {
-                                        showErrorDialog = true
-                                    }
-                                )
-                            } else {
-                                showErrorDialog = true
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("KIRIM SOS ALERT", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-            } else {
-                when (val state = sosRequestsState) {
-                    is UiState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Color.Red)
-                        }
-                    }
-                    is UiState.Success -> {
-                        if (state.data.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text(text = "Belum ada permintaan bantuan darah.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(state.data) { request ->
-                                    SosRequestCard(
-                                        request = request,
-                                        onCall = {
-                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${request.requesterPhone}"))
-                                            context.startActivity(intent)
-                                        },
-                                        onChat = {
-                                            navController.navigate(Screen.Chat.createRoute(request.requesterName))
-                                        }
-                                    )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                bloodTypes.forEach { type ->
+                                    DropdownMenuItem(text = { Text(type) }, onClick = { bloodType = type; expanded = false })
                                 }
                             }
                         }
-                    }
-                    is UiState.Error -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(text = state.message, color = Color.Red)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = location,
+                            onValueChange = { location = it },
+                            label = { Text("Lokasi / Rumah Sakit") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.Red, focusedLabelColor = Color.Red)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "Jumlah Kantong")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { if (quantity > 1) quantity-- }) { Icon(Icons.Default.Remove, contentDescription = null, tint = Color.Red) }
+                                Text(text = quantity.toString(), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                IconButton(onClick = { quantity++ }) { Icon(Icons.Default.Add, contentDescription = null, tint = Color.Red) }
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = notes,
+                            onValueChange = { notes = it },
+                            label = { Text("Catatan (Opsional)") },
+                            modifier = Modifier.fillMaxWidth().height(100.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.Red, focusedLabelColor = Color.Red)
+                        )
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Button(
+                            onClick = {
+                                if (location.isNotBlank()) {
+                                    val sosReq = SosRequestResponse(
+                                        id = "sos_${System.currentTimeMillis()}",
+                                        requesterName = userData?.name ?: "User",
+                                        bloodType = bloodType,
+                                        location = location,
+                                        quantity = quantity,
+                                        notes = notes,
+                                        timestamp = System.currentTimeMillis(),
+                                        requesterPhone = userData?.phone ?: "",
+                                        requesterId = userData?.id ?: ""
+                                    )
+                                    bloodViewModel.sendSosRequest(sosReq, { showSuccessDialog = true }, { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() })
+                                } else {
+                                    Toast.makeText(context, "Mohon isi lokasi", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Warning, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("KIRIM SOS ALERT", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                1 -> {
+                    when (val state = sosRequestsState) {
+                        is UiState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = Color.Red) }
+                        is UiState.Success -> {
+                            if (state.data.isEmpty()) {
+                                Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Tidak ada permintaan SOS aktif.") }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(state.data) { request ->
+                                        SosRequestCard(
+                                            request = request,
+                                            currentUserId = userData?.id ?: "",
+                                            onCall = {
+                                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${request.requesterPhone}"))
+                                                context.startActivity(intent)
+                                            },
+                                            onChat = { navController.navigate(Screen.Chat.createRoute(request.requesterName)) },
+                                            onComplete = {
+                                                bloodViewModel.completeSosRequest(request) {
+                                                    Toast.makeText(context, "SOS Berhasil Diselesaikan", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        is UiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text(state.message, color = Color.Red) }
+                    }
+                }
+                2 -> {
+                    when (val state = sosHistoryState) {
+                        is UiState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = Color.Red) }
+                        is UiState.Success -> {
+                            if (state.data.isEmpty()) {
+                                Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Belum ada riwayat SOS.") }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(state.data) { history ->
+                                        SosHistoryCard(history)
+                                    }
+                                }
+                            }
+                        }
+                        is UiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text(state.message, color = Color.Red) }
                     }
                 }
             }
@@ -337,7 +288,15 @@ fun SOSScreen(
 }
 
 @Composable
-fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -> Unit) {
+fun SosRequestCard(
+    request: SosRequestResponse, 
+    currentUserId: String, 
+    onCall: () -> Unit, 
+    onChat: () -> Unit,
+    onComplete: () -> Unit
+) {
+    val isOwnRequest = request.requesterId == currentUserId
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -346,48 +305,72 @@ fun SosRequestCard(request: SosRequestResponse, onCall: () -> Unit, onChat: () -
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Red, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = request.bloodType, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Box(Modifier.size(48.dp).clip(CircleShape).background(Color.Red), Alignment.Center) {
+                    Text(text = request.bloodType, color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = request.requesterName, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(text = "Butuh: ${request.quantity} Kantong", color = Color.Red, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Column(Modifier.weight(1f)) {
+                    Text(text = request.requesterName, fontWeight = FontWeight.Bold)
+                    Text(text = "Butuh: ${request.quantity} Kantong", color = Color.Red, fontSize = 14.sp)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Lokasi: ${request.location}", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(text = "Lokasi: ${request.location}", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             if (request.notes.isNotBlank()) {
-                Text(text = "\"${request.notes}\"", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                Text(text = "\"${request.notes}\"", color = Color.Gray, fontSize = 13.sp)
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(
-                    onClick = onChat,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color(0xFFE3F2FD).copy(alpha = 0.2f), CircleShape)
+
+            if (isOwnRequest) {
+                Button(
+                    onClick = onComplete,
+                    modifier = Modifier.fillMaxWidth().height(45.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.Blue, modifier = Modifier.size(20.dp))
+                    Text("SOS Teratasi / Selesai", color = Color.White, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                IconButton(
-                    onClick = onCall,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color(0xFFE8F5E9).copy(alpha = 0.2f), CircleShape)
-                ) {
-                    Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
+            } else {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    IconButton(onClick = onChat, modifier = Modifier.size(40.dp).background(Color(0xFFE3F2FD), CircleShape)) {
+                        Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.Blue)
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    IconButton(onClick = onCall, modifier = Modifier.size(40.dp).background(Color(0xFFE8F5E9), CircleShape)) {
+                        Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF2E7D32))
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SosHistoryCard(history: SosRequestResponse) {
+    val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+    val dateString = sdf.format(Date(history.timestamp))
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.LightGray)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(40.dp).clip(CircleShape).background(Color.Gray), Alignment.Center) {
+                    Text(text = history.bloodType, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(text = "SOS Selesai", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                    Text(text = dateString, fontSize = 11.sp, color = Color.Gray)
+                }
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50))
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Lokasi: ${history.location}", fontSize = 13.sp)
+            Text(text = "Jumlah: ${history.quantity} Kantong", fontSize = 13.sp)
         }
     }
 }

@@ -98,6 +98,36 @@ class BloodRepository(
         }
     }
 
+    suspend fun deleteSosRequest(id: String): Boolean {
+        return try {
+            val response = apiService.deleteFirebaseSosRequest(id)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun completeSosRequest(request: SosRequestResponse): Boolean {
+        return try {
+            // Simpan ke riwayat
+            apiService.saveFirebaseSosHistory(request.requesterId, request.id, request)
+            // Hapus dari daftar aktif
+            apiService.deleteFirebaseSosRequest(request.id)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun getSosHistory(userId: String): List<SosRequestResponse> {
+        return try {
+            val map = apiService.getFirebaseSosHistory(userId)
+            map?.values?.toList()?.sortedByDescending { it.timestamp } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     suspend fun getDonations(userId: String): List<DonationResponse> {
         return try {
             val map = apiService.getFirebaseDonations(userId)
