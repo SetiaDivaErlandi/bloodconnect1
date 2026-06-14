@@ -2,6 +2,8 @@ package com.example.bloodconnect.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,112 +48,124 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
             )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = { Text("Cari topik edukasi...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Red,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    cursorColor = Color.Red,
-                    focusedLabelColor = Color.Red,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    placeholder = { Text("Cari topik edukasi...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Red,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = Color.Red,
+                        focusedLabelColor = Color.Red,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-            )
+            }
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clickable { navController.navigate(Screen.EducationSteps.route) },
-                colors = CardDefaults.cardColors(containerColor = Color.Red),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clickable { navController.navigate(Screen.EducationSteps.route) },
+                    colors = CardDefaults.cardColors(containerColor = Color.Red),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.Info, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(text = "Langkah Donor Darah", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                        Text(text = "Pelajari 5 langkah proses sebelum melakukan donor.", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(text = "Langkah Donor Darah", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(text = "Pelajari 5 langkah proses sebelum melakukan donor.", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Kategori",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
 
-            Text(
-                text = "Kategori",
-                modifier = Modifier.padding(horizontal = 16.dp),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val isDonorSelected = selectedCategoryFilter == "Donor"
-                EducationCategoryItem("Donor", Icons.Default.Bloodtype, Color.Red, isDonorSelected) { 
-                    selectedCategoryFilter = if (isDonorSelected) null else "Donor"
-                }
-                val isTipsSelected = selectedCategoryFilter == "Tips"
-                EducationCategoryItem("Syarat & Tips", Icons.AutoMirrored.Filled.Assignment, Color.Red, isTipsSelected) { 
-                    selectedCategoryFilter = if (isTipsSelected) null else "Tips"
-                }
-                val isManfaatSelected = selectedCategoryFilter == "Kesehatan"
-                EducationCategoryItem("Manfaat", Icons.Default.Favorite, Color.Red, isManfaatSelected) { 
-                    selectedCategoryFilter = if (isManfaatSelected) null else "Kesehatan"
-                }
-                EducationCategoryItem("Favorit Saya", Icons.Default.Bookmark, Color.Red, false) { 
-                    navController.navigate(Screen.EducationBookmark.route) 
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    val isSemuaSelected = selectedCategoryFilter == null
+                    EducationCategoryItem("Semua", Icons.AutoMirrored.Filled.List, Color.Red, isSemuaSelected) {
+                        selectedCategoryFilter = null
+                    }
+                    val isDonorSelected = selectedCategoryFilter == "Donor"
+                    EducationCategoryItem("Donor", Icons.Default.Bloodtype, Color.Red, isDonorSelected) { 
+                        selectedCategoryFilter = if (isDonorSelected) null else "Donor"
+                    }
+                    val isTipsSelected = selectedCategoryFilter == "Tips"
+                    EducationCategoryItem("Syarat & Tips", Icons.AutoMirrored.Filled.Assignment, Color.Red, isTipsSelected) { 
+                        selectedCategoryFilter = if (isTipsSelected) null else "Tips"
+                    }
+                    val isManfaatSelected = selectedCategoryFilter == "Kesehatan"
+                    EducationCategoryItem("Manfaat", Icons.Default.Favorite, Color.Red, isManfaatSelected) { 
+                        selectedCategoryFilter = if (isManfaatSelected) null else "Kesehatan"
+                    }
+                    EducationCategoryItem("Favorit Saya", Icons.Default.Bookmark, Color.Red, false) { 
+                        navController.navigate(Screen.EducationBookmark.route) 
+                    }
                 }
             }
 
-            Text(
-                text = "Artikel Populer",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            item {
+                Text(
+                    text = "Artikel Populer",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
 
             when (val state = bloodDataState) {
                 is UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color.Red)
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color.Red)
+                        }
                     }
                 }
                 is UiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val filteredArticles = state.data.articles.filter { article ->
-                            val matchesSearch = article.title.contains(searchQuery, ignoreCase = true)
-                            val matchesCategory = selectedCategoryFilter == null || article.category.contains(selectedCategoryFilter!!, ignoreCase = true)
-                            matchesSearch && matchesCategory
-                        }
-                        
-                        items(filteredArticles) { article ->
+                    val filteredArticles = state.data.articles.filter { article ->
+                        val matchesSearch = article.title.contains(searchQuery, ignoreCase = true)
+                        val matchesCategory = selectedCategoryFilter == null || article.category.contains(selectedCategoryFilter!!, ignoreCase = true)
+                        matchesSearch && matchesCategory
+                    }
+                    items(filteredArticles) { article ->
+                        Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                             ArticleCard(article) {
                                 val encodedTitle = URLEncoder.encode(article.title, StandardCharsets.UTF_8.toString())
                                 val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
@@ -161,7 +175,11 @@ fun EducationScreen(navController: NavController, viewModel: BloodViewModel) {
                     }
                 }
                 is UiState.Error -> {
-                    ErrorMessage(state.message)
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                            ErrorMessage(state.message)
+                        }
+                    }
                 }
             }
         }

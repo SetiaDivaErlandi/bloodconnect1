@@ -71,3 +71,20 @@ data class BloodDataResponse(
     @SerializedName("donors") val donors: List<Donor>,
     @SerializedName("articles") val articles: List<Article>
 )
+
+data class ChatMessage(
+    val id: String = "",
+    val senderId: String = "",
+    val senderName: String = "",
+    val text: String = "",
+    val timestamp: Long = 0
+)
+
+data class ChatListEntry(
+    val contactId: String = "",
+    val contactName: String = "",
+    val contactImageUrl: String = "",
+    val lastMessage: String = "",
+    val timestamp: Long = 0,
+    val unreadCount: Int = 0
+)

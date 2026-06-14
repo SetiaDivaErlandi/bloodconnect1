@@ -8,6 +8,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,24 +22,65 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.bloodconnect.data.model.ChatListEntry
 import com.example.bloodconnect.ui.navigation.Screen
-
-data class ChatPreview(
-    val id: String,
-    val name: String,
-    val lastMessage: String,
-    val time: String,
-    val imageUrl: String
-)
+import com.example.bloodconnect.ui.viewmodel.BloodViewModel
+import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatListScreen(navController: NavController) {
-    val chatHistory = listOf(
-        ChatPreview("1", "Andi Pratama", "Oke, saya segera meluncur!", "10:35", "https://api.dicebear.com/7.x/avataaars/svg?seed=Andi&eyes=default&mouth=smile&eyebrowType=default"),
-        ChatPreview("2", "Sinta Amelia", "Terima kasih banyak kak.", "Yesterday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Sinta&eyes=default&mouth=smile&eyebrowType=default"),
-        ChatPreview("3", "Rido Putra", "Bisa kirim lokasi detailnya?", "Monday", "https://api.dicebear.com/7.x/avataaars/svg?seed=Rido&eyes=default&mouth=smile&eyebrowType=default")
-    )
+fun ChatListScreen(
+    navController: NavController,
+    viewModel: BloodViewModel,
+    authViewModel: AuthViewModel
+) {
+    val currentUser by authViewModel.userData.collectAsState()
+    val chatHistory by viewModel.chatList.collectAsState()
+
+    val mockChats = remember {
+        listOf(
+            ChatListEntry(
+                contactId = "d5",
+                contactName = "Andi Pratama",
+                contactImageUrl = "",
+                lastMessage = "Tentu, saya bisa ke rumah sakit sekarang.",
+                timestamp = System.currentTimeMillis() - 7200000,
+                unreadCount = 1
+            ),
+            ChatListEntry(
+                contactId = "sinta_amelia",
+                contactName = "Sinta Amelia",
+                contactImageUrl = "",
+                lastMessage = "Bisa, saya sedang dalam perjalanan ke sana.",
+                timestamp = System.currentTimeMillis() - 10200000,
+                unreadCount = 0
+            ),
+            ChatListEntry(
+                contactId = "rido_putra",
+                contactName = "Rido Putra",
+                contactImageUrl = "",
+                lastMessage = "Baik, saya siap membantu. Hubungi saya jika sudah di lokasi.",
+                timestamp = System.currentTimeMillis() - 13200000,
+                unreadCount = 0
+            )
+        )
+    }
+
+    val displayChats = remember(chatHistory, mockChats) {
+        val list = chatHistory.toMutableList()
+        mockChats.forEach { mock ->
+            if (list.none { it.contactId == mock.contactId || it.contactName.equals(mock.contactName, ignoreCase = true) }) {
+                list.add(mock)
+            }
+        }
+        list.sortedByDescending { it.timestamp }
+    }
+
+    LaunchedEffect(currentUser) {
+        currentUser?.id?.let { userId ->
+            viewModel.fetchChatList(userId)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -45,17 +90,35 @@ fun ChatListScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            LazyColumn {
-                items(chatHistory) { chat ->
-                    ChatItem(chat) {
-                        navController.navigate(Screen.Chat.createRoute(chat.name))
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp), 
-                        thickness = 0.5.dp, 
-                        color = MaterialTheme.colorScheme.outlineVariant
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (displayChats.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Tidak ada pesan aktif.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
                     )
+                }
+            } else {
+                LazyColumn {
+                    items(displayChats) { chat ->
+                        ChatItem(chat) {
+                            navController.navigate(Screen.Chat.createRoute(chat.contactName))
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
                 }
             }
         }
@@ -63,7 +126,7 @@ fun ChatListScreen(navController: NavController) {
 }
 
 @Composable
-fun ChatItem(chat: ChatPreview, onClick: () -> Unit) {
+fun ChatItem(chat: ChatListEntry, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -71,8 +134,14 @@ fun ChatItem(chat: ChatPreview, onClick: () -> Unit) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val avatarUrl = if (chat.contactImageUrl.isNullOrBlank()) {
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=${chat.contactName}&eyes=default&mouth=smile&eyebrowType=default"
+        } else {
+            chat.contactImageUrl
+        }
+
         AsyncImage(
-            model = chat.imageUrl,
+            model = avatarUrl,
             contentDescription = null,
             modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.LightGray),
             contentScale = ContentScale.Crop
@@ -80,18 +149,46 @@ fun ChatItem(chat: ChatPreview, onClick: () -> Unit) {
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = chat.name, 
-                fontWeight = FontWeight.Bold, 
+                text = chat.contactName,
+                fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = chat.lastMessage, 
-                fontSize = 14.sp, 
-                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                text = chat.lastMessage,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
         }
-        Text(text = chat.time, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val timeStr = try {
+                sdf.format(java.util.Date(chat.timestamp))
+            } catch (e: Exception) {
+                ""
+            }
+            Text(text = timeStr, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (chat.unreadCount > 0) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .background(Color.Red, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = chat.unreadCount.toString(),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }

@@ -33,6 +33,9 @@ import com.example.bloodconnect.ui.screen.*
 import com.example.bloodconnect.ui.theme.BloodconnectTheme
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 import com.example.bloodconnect.ui.viewmodel.BloodViewModel
+import com.example.bloodconnect.ui.viewmodel.UiState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -66,13 +69,54 @@ fun BloodConnectApp() {
     val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
     val bloodViewModel: BloodViewModel = viewModel(factory = viewModelFactory)
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+    val currentUser by authViewModel.userData.collectAsState()
     
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val sosRequestsState by bloodViewModel.sosRequests.collectAsState()
+    var lastNotifiedSosId by remember { mutableStateOf("") }
+
     LaunchedEffect(currentDestination) {
         if (isLoggedIn) {
             authViewModel.updateActivity()
+        }
+    }
+
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            while (true) {
+                bloodViewModel.fetchSosRequests()
+                delay(5000)
+            }
+        }
+    }
+
+    LaunchedEffect(sosRequestsState) {
+        val state = sosRequestsState
+        if (state is UiState.Success && isLoggedIn) {
+            val list = state.data
+            val latest = list.firstOrNull { it.requesterId != (currentUser?.id ?: "") }
+            if (latest != null && latest.id != lastNotifiedSosId) {
+                val timeDiff = System.currentTimeMillis() - latest.timestamp
+                if (timeDiff < 60000L) {
+                    lastNotifiedSosId = latest.id
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "SOS BARU: ${latest.requesterName} butuh darah ${latest.bloodType}!",
+                            actionLabel = "Lihat",
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            navController.navigate(Screen.SOS.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -87,6 +131,7 @@ fun BloodConnectApp() {
     val showBottomBar = currentDestination?.route in bottomBarScreens.map { it.route }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
@@ -152,17 +197,17 @@ fun BloodConnectApp() {
                 SOSScreen(navController, bloodViewModel, authViewModel)
             }
             composable(Screen.Map.route) {
-                MapScreen(navController, bloodViewModel)
+                MapScreen(navController, bloodViewModel, authViewModel)
             }
             composable(Screen.ChatList.route) {
-                ChatListScreen(navController)
+                ChatListScreen(navController, bloodViewModel, authViewModel)
             }
             composable(
                 route = Screen.Chat.route,
                 arguments = listOf(navArgument("name") { type = NavType.StringType })
             ) { backStackEntry ->
                 val name = backStackEntry.arguments?.getString("name") ?: ""
-                ChatScreen(navController, name)
+                ChatScreen(navController, name, bloodViewModel, authViewModel)
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(navController, authViewModel)
@@ -198,6 +243,9 @@ fun BloodConnectApp() {
             }
             composable(Screen.ForgotPassword.route) {
                 ForgotPasswordScreen(navController, authViewModel)
+            }
+            composable(Screen.NotificationList.route) {
+                NotificationScreen(navController, bloodViewModel, authViewModel)
             }
         }
     }

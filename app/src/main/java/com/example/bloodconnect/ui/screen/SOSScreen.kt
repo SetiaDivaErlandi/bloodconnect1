@@ -92,6 +92,11 @@ fun SOSScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screen.NotificationList.route) }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Red)
             )
         }

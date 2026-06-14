@@ -50,7 +50,7 @@ class AuthViewModel(
             ) { loggedIn, lastActive ->
                 Pair(loggedIn, lastActive)
             }.collect { (loggedIn, lastActive) ->
-                if (loggedIn && lastActive > 0L && System.currentTimeMillis() - lastActive > 3600000L) {
+                if (loggedIn && lastActive > 0L && System.currentTimeMillis() - lastActive > 2592000000L) {
                     logout()
                 }
             }

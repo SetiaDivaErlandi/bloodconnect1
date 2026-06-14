@@ -1,5 +1,8 @@
 package com.example.bloodconnect.ui.screen
 
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +41,15 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+fun isInternetAvailable(context: Context): Boolean {
+    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = cm.activeNetwork ?: return false
+    val capabilities = cm.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
 
 @Composable
 fun HomeScreen(
@@ -49,7 +61,9 @@ fun HomeScreen(
     val userData by authViewModel.userData.collectAsState()
     val donationsState by bloodViewModel.donations.collectAsState()
     val context = LocalContext.current
+    var isOffline by remember { mutableStateOf(!isInternetAvailable(context)) }
 
+    val scope = rememberCoroutineScope()
     LaunchedEffect(userData) {
         userData?.id?.let { userId ->
             bloodViewModel.fetchDonations(userId)
@@ -87,133 +101,165 @@ fun HomeScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        item {
-            HeaderSection(userData?.name ?: "User", userData?.bloodType ?: "-")
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            item {
+                HeaderSection(navController, userData?.name ?: "User", userData?.bloodType ?: "-")
+            }
 
-        item {
-            SOSRequestSection(navController)
-        }
+            item {
+                SOSRequestSection(navController)
+            }
 
-        item {
-            Text(
-                text = "Menu Utama",
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-            MenuSection(navController, eligibilityInfo.first, eligibilityInfo.second)
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            item {
                 Text(
-                    text = "Donor Terdekat",
+                    text = "Menu Utama",
                     color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                Text(
-                    text = "Lihat Semua",
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.clickable { navController.navigate(Screen.Map.route) }
-                )
+                MenuSection(navController, eligibilityInfo.first, eligibilityInfo.second)
             }
-        }
 
-        item {
-            when (val state = bloodDataState) {
-                is UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color.Red)
-                    }
-                }
-                is UiState.Success -> {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.data.donors) { donor ->
-                            DonorCard(donor) {
-                                navController.navigate(Screen.Chat.createRoute(donor.name))
-                            }
-                        }
-                    }
-                }
-                is UiState.Error -> {
-                    ErrorMessage(state.message)
-                }
-            }
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Edukasi Terbaru",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Text(
-                    text = "Lihat Semua",
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+            item {
+                Row(
                     modifier = Modifier
-                        .padding(end = 16.dp)
-                        .clickable { navController.navigate(Screen.Education.route) }
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Donor Terdekat",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "Lihat Semua",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.clickable { navController.navigate(Screen.Map.route) }
+                    )
+                }
             }
-        }
 
-        item {
-            when (val state = bloodDataState) {
-                is UiState.Success -> {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        state.data.articles.take(3).forEach { article ->
-                            ArticleCard(article) {
-                                val encodedTitle = URLEncoder.encode(article.title, StandardCharsets.UTF_8.toString())
-                                val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
-                                navController.navigate(Screen.EducationDetail.createRoute(encodedTitle, encodedUrl))
+            item {
+                when (val state = bloodDataState) {
+                    is UiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color.Red)
+                        }
+                    }
+                    is UiState.Success -> {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.data.donors) { donor ->
+                                DonorCard(donor) {
+                                    navController.navigate(Screen.Chat.createRoute(donor.name))
+                                }
                             }
                         }
                     }
+                    is UiState.Error -> {
+                        ErrorMessage(state.message)
+                    }
                 }
-                else -> {}
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Edukasi Terbaru",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                    Text(
+                        text = "Lihat Semua",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clickable { navController.navigate(Screen.Education.route) }
+                    )
+                }
+            }
+
+            item {
+                when (val state = bloodDataState) {
+                    is UiState.Success -> {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            state.data.articles.take(3).forEach { article ->
+                                ArticleCard(article) {
+                                    val encodedTitle = URLEncoder.encode(article.title, StandardCharsets.UTF_8.toString())
+                                    val encodedUrl = URLEncoder.encode(article.imageUrl, StandardCharsets.UTF_8.toString())
+                                    navController.navigate(Screen.EducationDetail.createRoute(encodedTitle, encodedUrl))
+                                }
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
-        
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+
+
+    }
+
+    if (isOffline) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Koneksi Terputus", fontWeight = FontWeight.Bold) },
+            text = { Text("Tidak ada koneksi internet. Silakan hubungkan ke internet untuk memuat data.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (isInternetAvailable(context)) {
+                            isOffline = false
+                            bloodViewModel.fetchBloodData()
+                            userData?.id?.let { userId ->
+                                bloodViewModel.fetchDonations(userId)
+                            }
+                        } else {
+                            Toast.makeText(context, "Masih offline. Periksa koneksi Anda.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Muat Ulang", color = Color.White)
+                }
+            },
+            dismissButton = null,
+            containerColor = Color.White
+        )
     }
 }
 
 @Composable
-fun HeaderSection(name: String, bloodType: String) {
+fun HeaderSection(navController: NavController, name: String, bloodType: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -226,10 +272,21 @@ fun HeaderSection(name: String, bloodType: String) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(text = "Hello, $name", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text(text = "Thank you for being a hero!", color = Color.White.copy(alpha = 0.8f))
             }
+            IconButton(
+                onClick = { navController.navigate(Screen.NotificationList.route) }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Card(
                 shape = CircleShape,
                 colors = CardDefaults.cardColors(containerColor = Color.White),

@@ -146,7 +146,7 @@ fun SearchDonorScreen(
                                 SearchDonorItem(
                                     donor = donor,
                                     onCall = {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${if (donor.name == "Andi Pratama") "08123456789" else "08987654321"}"))
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${donor.phone}"))
                                         context.startActivity(intent)
                                     },
                                     onChat = {

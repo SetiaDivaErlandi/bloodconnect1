@@ -6,6 +6,8 @@ import com.example.bloodconnect.data.model.Donor
 import com.example.bloodconnect.data.model.Article
 import com.example.bloodconnect.data.model.SosRequestResponse
 import com.example.bloodconnect.data.model.DonationResponse
+import com.example.bloodconnect.data.model.ChatMessage
+import com.example.bloodconnect.data.model.ChatListEntry
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
@@ -88,4 +90,28 @@ interface ApiService {
         @Path("id") id: String,
         @Body donation: DonationResponse
     ): DonationResponse
+
+    @GET("chats/{roomId}.json")
+    suspend fun getChatMessages(
+        @Path("roomId") roomId: String
+    ): Map<String, ChatMessage>?
+
+    @PUT("chats/{roomId}/{messageId}.json")
+    suspend fun sendChatMessage(
+        @Path("roomId") roomId: String,
+        @Path("messageId") messageId: String,
+        @Body message: ChatMessage
+    ): ChatMessage
+
+    @GET("chat_list/{userId}.json")
+    suspend fun getChatList(
+        @Path("userId") userId: String
+    ): Map<String, ChatListEntry>?
+
+    @PUT("chat_list/{userId}/{contactId}.json")
+    suspend fun updateChatListEntry(
+        @Path("userId") userId: String,
+        @Path("contactId") contactId: String,
+        @Body entry: ChatListEntry
+    ): ChatListEntry
 }
