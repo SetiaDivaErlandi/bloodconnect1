@@ -50,8 +50,9 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import java.util.*
+import kotlin.random.Random
 
-fun getCoordinatesForLocation(locationName: String): GeoPoint {
+fun getCoordinatesForLocation(locationName: String, id: String = ""): GeoPoint {
     val clean = locationName.lowercase().trim()
     val base = when {
         clean.contains("teluk betung") -> GeoPoint(-5.4497, 105.2633)
@@ -64,8 +65,12 @@ fun getCoordinatesForLocation(locationName: String): GeoPoint {
         clean.contains("rajabasa") -> GeoPoint(-5.3750, 105.2420)
         else -> GeoPoint(-5.3971, 105.2668)
     }
-    val offsetLat = (Math.random() - 0.5) * 0.01
-    val offsetLng = (Math.random() - 0.5) * 0.01
+    
+    val seed = (id + locationName).hashCode().toLong()
+    val random = Random(seed)
+    val offsetLat = (random.nextDouble() - 0.5) * 0.02
+    val offsetLng = (random.nextDouble() - 0.5) * 0.02
+    
     return GeoPoint(base.latitude + offsetLat, base.longitude + offsetLng)
 }
 
@@ -82,6 +87,11 @@ fun MapScreen(
 
     var selectedBloodType by remember { mutableStateOf("Semua") }
     var locationSearchQuery by remember { mutableStateOf("") }
+    
+    var showSos by remember { mutableStateOf(true) }
+    var showDonors by remember { mutableStateOf(true) }
+    var showUser by remember { mutableStateOf(true) }
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
@@ -111,6 +121,8 @@ fun MapScreen(
     val defaultPoint = GeoPoint(-5.3971, 105.2668)
     val mapView = remember { MapView(context) }
     var userLocationPoint by remember { mutableStateOf<GeoPoint?>(null) }
+    
+    var hasInitializedFocus by remember { mutableStateOf(false) }
 
     val fetchLocation = {
         try {
@@ -144,8 +156,11 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
+        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = context.packageName
+        
         viewModel.fetchSosRequests()
+        viewModel.fetchBloodData()
         val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         if (hasFine || hasCoarse) {
@@ -179,8 +194,11 @@ fun MapScreen(
     }
 
     LaunchedEffect(finalUserPoint) {
-        mapView.controller.animateTo(finalUserPoint)
-        mapView.controller.setZoom(15.0)
+        if (!hasInitializedFocus && finalUserPoint != defaultPoint) {
+            mapView.controller.animateTo(finalUserPoint)
+            mapView.controller.setZoom(15.0)
+            hasInitializedFocus = true
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -257,58 +275,63 @@ fun MapScreen(
                 update = { view ->
                     view.overlays.clear()
 
-                    val firebaseDonors = if (bloodDataState is UiState.Success) {
-                        (bloodDataState as UiState.Success).data.donors.filter { it.id != (currentUser?.id ?: "") }
-                    } else emptyList()
-                    val allDonors = firebaseDonors + dummyDonors
-
-                    val filteredDonors = allDonors.filter {
-                        selectedBloodType == "Semua" || it.bloodType.equals(selectedBloodType, ignoreCase = true)
-                    }
-
-                    filteredDonors.forEach { donor ->
-                        val lat = donor.latitude ?: (-5.3971 + (Math.random() * 0.05))
-                        val lng = donor.longitude ?: (105.2668 + (Math.random() * 0.05))
-
-                        val marker = Marker(view)
-                        marker.position = GeoPoint(lat, lng)
-                        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        marker.title = donor.name
-                        marker.snippet = "Pendonor - Golongan Darah: ${donor.bloodType}"
-
-                        val greenIcon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_green)
-                        marker.icon = greenIcon
-
-                        marker.setOnMarkerClickListener { m, _ ->
-                            selectedDonor = donor
-                            showBottomSheet = true
-                            m.showInfoWindow()
-                            true
+                    if (showDonors) {
+                        val firebaseDonors = if (bloodDataState is UiState.Success) {
+                            (bloodDataState as UiState.Success).data.donors.filter { it.id != (currentUser?.id ?: "") }
+                        } else emptyList()
+                        val allDonors = firebaseDonors + dummyDonors
+                        val filteredDonors = allDonors.filter {
+                            selectedBloodType == "Semua" || it.bloodType.equals(selectedBloodType, ignoreCase = true)
                         }
-                        view.overlays.add(marker)
+
+                        filteredDonors.forEach { donor ->
+                            val point = if (donor.latitude != null && donor.longitude != null) {
+                                GeoPoint(donor.latitude, donor.longitude)
+                            } else {
+                                getCoordinatesForLocation(donor.location, donor.id)
+                            }
+                            val marker = Marker(view)
+                            marker.position = point
+                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.title = donor.name
+                            marker.snippet = "Pendonor - Golongan Darah: ${donor.bloodType}"
+                            marker.icon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_green)
+                            marker.setOnMarkerClickListener { m, _ ->
+                                selectedDonor = donor
+                                showBottomSheet = true
+                                m.showInfoWindow()
+                                true
+                            }
+                            view.overlays.add(marker)
+                        }
                     }
 
-                    val sosState = sosRequestsState
-                    if (sosState is UiState.Success) {
-                        val activeSos = sosState.data.filter { (it.requesterId ?: "") != (currentUser?.id ?: "") }
-                        activeSos.forEach { request ->
-                            val point = getCoordinatesForLocation(request.location ?: "")
+                    if (showSos) {
+                        val allSos = if (sosRequestsState is UiState.Success) {
+                            (sosRequestsState as UiState.Success).data.filter { it.requesterId != (currentUser?.id ?: "") }
+                        } else emptyList()
+
+                        val filteredSos = allSos.filter {
+                            selectedBloodType == "Semua" || it.bloodType.equals(selectedBloodType, ignoreCase = true)
+                        }
+
+                        filteredSos.forEach { request ->
+                            val loc = request.location ?: ""
+                            val reqId = request.requesterId ?: ""
+                            val point = getCoordinatesForLocation(loc, reqId)
                             val marker = Marker(view)
                             marker.position = point
                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             marker.title = request.requesterName ?: "User"
                             marker.snippet = "Butuh Darah: ${request.bloodType ?: "-"} (Qty: ${request.quantity})"
-
-                            val redIcon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_red)
-                            marker.icon = redIcon
-
+                            marker.icon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_red)
                             marker.setOnMarkerClickListener { m, _ ->
                                 selectedDonor = Donor(
-                                    id = request.requesterId ?: "",
+                                    id = reqId,
                                     name = request.requesterName ?: "User",
                                     bloodType = request.bloodType ?: "-",
                                     distance = "SOS",
-                                    location = request.location ?: "",
+                                    location = loc,
                                     imageUrl = "",
                                     phone = if (request.requesterPhone.isNullOrBlank() || request.requesterPhone == "null") "08123456789" else request.requesterPhone
                                 )
@@ -320,27 +343,26 @@ fun MapScreen(
                         }
                     }
 
-                    currentUser?.let { me ->
+                    if (showUser) {
                         val selfMarker = Marker(view)
                         selfMarker.position = finalUserPoint
                         selfMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        selfMarker.title = me.name
-                        selfMarker.snippet = "Lokasi Saya (Golongan Darah: ${me.bloodType})"
-
-                        val blueIcon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_blue)
-                        selfMarker.icon = blueIcon
-
+                        selfMarker.title = currentUser?.name ?: "Lokasi Saya"
+                        selfMarker.snippet = "Lokasi Saya ${currentUser?.let { "(Golongan: ${it.bloodType})" } ?: ""}"
+                        selfMarker.icon = ContextCompat.getDrawable(context, com.example.bloodconnect.R.drawable.ic_pin_blue)
                         selfMarker.setOnMarkerClickListener { m, _ ->
-                            selectedDonor = Donor(
-                                id = me.id,
-                                name = me.name,
-                                bloodType = me.bloodType,
-                                distance = "0 km",
-                                location = me.location,
-                                imageUrl = me.imageUrl,
-                                phone = me.phone
-                            )
-                            showBottomSheet = true
+                            currentUser?.let { me ->
+                                selectedDonor = Donor(
+                                    id = me.id,
+                                    name = me.name,
+                                    bloodType = me.bloodType,
+                                    distance = "0 km",
+                                    location = me.location,
+                                    imageUrl = me.imageUrl,
+                                    phone = me.phone
+                                )
+                                showBottomSheet = true
+                            }
                             m.showInfoWindow()
                             true
                         }
@@ -363,17 +385,15 @@ fun MapScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { navController.popBackStack() },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface, CircleShape).size(48.dp)
+                            modifier = Modifier.background(Color.White, CircleShape).size(48.dp)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
                         }
-
                         Spacer(modifier = Modifier.width(12.dp))
-
                         Surface(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(28.dp),
-                            color = MaterialTheme.colorScheme.surface,
+                            color = Color.White,
                             shadowElevation = 6.dp
                         ) {
                             TextField(
@@ -418,6 +438,43 @@ fun MapScreen(
                             )
                         )
                     }
+                }
+                
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = showSos,
+                        onClick = { 
+                            showSos = !showSos 
+                            if (showSos) {
+                            }
+                        },
+                        label = { Text("Butuh Darah", fontSize = 12.sp) },
+                        leadingIcon = { Box(Modifier.size(10.dp).background(Color.Red, CircleShape)) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color.Red.copy(alpha = 0.2f))
+                    )
+                    FilterChip(
+                        selected = showDonors,
+                        onClick = { showDonors = !showDonors },
+                        label = { Text("Pendonor", fontSize = 12.sp) },
+                        leadingIcon = { Box(Modifier.size(10.dp).background(Color(0xFF4CAF50), CircleShape)) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF4CAF50).copy(alpha = 0.2f))
+                    )
+                    FilterChip(
+                        selected = showUser,
+                        onClick = { 
+                            showUser = !showUser 
+                            if (showUser) {
+                                mapView.controller.animateTo(finalUserPoint)
+                                mapView.controller.setZoom(16.0)
+                            }
+                        },
+                        label = { Text("Saya", fontSize = 12.sp) },
+                        leadingIcon = { Box(Modifier.size(10.dp).background(Color(0xFF2196F3), CircleShape)) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF2196F3).copy(alpha = 0.2f))
+                    )
                 }
             }
         }

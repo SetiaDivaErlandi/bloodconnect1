@@ -42,6 +42,7 @@ class BloodViewModel(val repository: BloodRepository) : ViewModel() {
 
     init {
         fetchBloodData()
+        fetchSosRequests() // Ambil data SOS saat inisialisasi agar langsung muncul di peta
     }
 
     fun fetchBloodData() {
