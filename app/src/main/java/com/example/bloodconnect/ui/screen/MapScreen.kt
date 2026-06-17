@@ -257,7 +257,9 @@ fun MapScreen(
                 update = { view ->
                     view.overlays.clear()
 
-                    val firebaseDonors = if (bloodDataState is UiState.Success) (bloodDataState as UiState.Success).data.donors else emptyList()
+                    val firebaseDonors = if (bloodDataState is UiState.Success) {
+                        (bloodDataState as UiState.Success).data.donors.filter { it.id != (currentUser?.id ?: "") }
+                    } else emptyList()
                     val allDonors = firebaseDonors + dummyDonors
 
                     val filteredDonors = allDonors.filter {
@@ -421,6 +423,7 @@ fun MapScreen(
         }
 
         if (showBottomSheet && selectedDonor != null) {
+            val isMe = selectedDonor!!.id == (currentUser?.id ?: "")
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
                 sheetState = sheetState,
@@ -432,7 +435,7 @@ fun MapScreen(
                         .padding(24.dp)
                         .padding(bottom = 32.dp)
                 ) {
-                    Text(text = "Detail Pengguna", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = if (isMe) "Profil Saya" else "Detail Pengguna", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -443,39 +446,56 @@ fun MapScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text(text = selectedDonor!!.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text(text = "Lokasi: ${selectedDonor!!.location}", color = Color.Gray)
-                            Text(text = "No. HP: ${selectedDonor!!.phone}", color = Color.Black)
+                            Text(
+                                text = if (isMe) "Ini Anda, ${selectedDonor!!.name}" else selectedDonor!!.name,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            if (!isMe) {
+                                Text(text = "Lokasi: ${selectedDonor!!.location}", color = Color.Gray)
+                                Text(text = "No. HP: ${selectedDonor!!.phone}", color = Color.Black)
+                            }
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Button(
-                            onClick = {
-                                showBottomSheet = false
-                                navController.navigate(Screen.Chat.createRoute(selectedDonor!!.name))
-                            },
-                            modifier = Modifier.weight(1f).height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Chat")
+                    
+                    if (!isMe) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Button(
+                                onClick = {
+                                    showBottomSheet = false
+                                    navController.navigate(Screen.Chat.createRoute(selectedDonor!!.name))
+                                },
+                                modifier = Modifier.weight(1f).height(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Chat")
+                            }
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${selectedDonor!!.phone}"))
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.weight(1f).height(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Call, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Telepon")
+                            }
                         }
-                        Button(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${selectedDonor!!.phone}"))
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.weight(1f).height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Call, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Telepon")
-                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Ini adalah lokasi Anda saat ini.",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
                     }
                 }
             }

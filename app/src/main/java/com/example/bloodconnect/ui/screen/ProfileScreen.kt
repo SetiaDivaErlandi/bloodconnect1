@@ -27,6 +27,7 @@ import coil.compose.AsyncImage
 import com.example.bloodconnect.ui.navigation.Screen
 import com.example.bloodconnect.ui.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -43,6 +44,8 @@ fun ProfileScreen(
     var editName by remember { mutableStateOf("") }
     var editPhone by remember { mutableStateOf("") }
     var editLocation by remember { mutableStateOf("") }
+    var editBloodType by remember { mutableStateOf("") }
+    var editGender by remember { mutableStateOf("") }
     var editImageUrl by remember { mutableStateOf("") }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -50,6 +53,14 @@ fun ProfileScreen(
 
     var showAboutDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    
+    var locationExpanded by remember { mutableStateOf(false) }
+    var bloodTypeExpanded by remember { mutableStateOf(false) }
+    var genderExpanded by remember { mutableStateOf(false) }
+
+    val locations = listOf("Bandar Lampung")
+    val bloodTypes = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+    val genders = listOf("Laki-laki", "Perempuan")
 
     val avatars = listOf(
         "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&eyes=default&mouth=smile&eyebrowType=default",
@@ -104,18 +115,108 @@ fun ProfileScreen(
                             cursorColor = Color.Red
                         )
                     )
-                    OutlinedTextField(
-                        value = editLocation,
-                        onValueChange = { editLocation = it },
-                        label = { Text("Lokasi") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Red,
-                            focusedLabelColor = Color.Red,
-                            cursorColor = Color.Red
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = bloodTypeExpanded,
+                        onExpandedChange = { bloodTypeExpanded = !bloodTypeExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = editBloodType,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Golongan Darah") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bloodTypeExpanded) },
+                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Red,
+                                focusedLabelColor = Color.Red,
+                                cursorColor = Color.Red
+                            )
                         )
-                    )
+                        ExposedDropdownMenu(
+                            expanded = bloodTypeExpanded,
+                            onDismissRequest = { bloodTypeExpanded = false }
+                        ) {
+                            bloodTypes.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        editBloodType = type
+                                        bloodTypeExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    ExposedDropdownMenuBox(
+                        expanded = genderExpanded,
+                        onExpandedChange = { genderExpanded = !genderExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = editGender,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Jenis Kelamin") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
+                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Red,
+                                focusedLabelColor = Color.Red,
+                                cursorColor = Color.Red
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = genderExpanded,
+                            onDismissRequest = { genderExpanded = false }
+                        ) {
+                            genders.forEach { g ->
+                                DropdownMenuItem(
+                                    text = { Text(g) },
+                                    onClick = {
+                                        editGender = g
+                                        genderExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    ExposedDropdownMenuBox(
+                        expanded = locationExpanded,
+                        onExpandedChange = { locationExpanded = !locationExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = editLocation,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Lokasi") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = locationExpanded) },
+                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Red,
+                                focusedLabelColor = Color.Red,
+                                cursorColor = Color.Red
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = locationExpanded,
+                            onDismissRequest = { locationExpanded = false }
+                        ) {
+                            locations.forEach { city ->
+                                DropdownMenuItem(
+                                    text = { Text(city) },
+                                    onClick = {
+                                        editLocation = city
+                                        locationExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
 
                     Text(text = "Pilih Avatar Animasi", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Row(
@@ -144,7 +245,7 @@ fun ProfileScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        authViewModel.updateProfile(editName, editPhone, editLocation, editImageUrl)
+                        authViewModel.updateProfile(editName, editPhone, editLocation, editImageUrl, editBloodType, editGender)
                         showEditDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
@@ -364,7 +465,9 @@ fun ProfileScreen(
             ProfileMenuItem("Edit Profil", Icons.Default.Edit) {
                 editName = userData?.name ?: ""
                 editPhone = userData?.phone ?: ""
-                editLocation = userData?.location ?: ""
+                editLocation = userData?.location ?: "Bandar Lampung"
+                editBloodType = userData?.bloodType ?: "O+"
+                editGender = userData?.gender ?: "Laki-laki"
                 editImageUrl = userData?.imageUrl ?: ""
                 showEditDialog = true
             }

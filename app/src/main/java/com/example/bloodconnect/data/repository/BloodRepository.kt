@@ -224,6 +224,15 @@ class BloodRepository(
         }
     }
 
+    suspend fun deleteDonation(userId: String, donationId: String): Boolean {
+        return try {
+            val response = apiService.deleteFirebaseDonation(userId, donationId)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     suspend fun getChatMessages(roomId: String): List<ChatMessage> {
         return try {
             val map = apiService.getChatMessages(roomId)

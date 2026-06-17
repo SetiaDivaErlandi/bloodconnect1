@@ -131,7 +131,7 @@ class AuthViewModel(
         }
     }
 
-    fun updateProfile(name: String, phone: String, location: String, imageUrl: String) {
+    fun updateProfile(name: String, phone: String, location: String, imageUrl: String, bloodType: String, gender: String) {
         val currentUser = userData.value ?: return
         viewModelScope.launch {
             try {
@@ -140,7 +140,9 @@ class AuthViewModel(
                     name = name,
                     phone = phone,
                     location = location,
-                    imageUrl = imageUrl
+                    imageUrl = imageUrl,
+                    bloodType = bloodType,
+                    gender = gender
                 )
                 if (updatedUser != null) {
                     userPreferences.saveLoginSession(updatedUser)

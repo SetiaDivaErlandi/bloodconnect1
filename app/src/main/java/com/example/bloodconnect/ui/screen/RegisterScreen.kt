@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -32,17 +33,14 @@ fun RegisterScreen(
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var bloodType by remember { mutableStateOf("O+") }
-    var location by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("Laki-laki") }
     
     val authState by authViewModel.authState.collectAsState()
     
     var showSuccessDialog by remember { mutableStateOf(false) }
     var bloodTypeExpanded by remember { mutableStateOf(false) }
-    var genderExpanded by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val bloodTypes = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
-    val genders = listOf("Laki-laki", "Perempuan")
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
@@ -166,7 +164,13 @@ fun RegisterScreen(
             onValueChange = { password = it },
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            visualTransformation = PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = null)
+                }
+            },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -220,66 +224,6 @@ fun RegisterScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ExposedDropdownMenuBox(
-            expanded = genderExpanded,
-            onExpandedChange = { genderExpanded = !genderExpanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = gender,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Jenis Kelamin") },
-                leadingIcon = { Icon(Icons.Default.Wc, contentDescription = null) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
-                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Red,
-                    focusedLabelColor = Color.Red,
-                    cursorColor = Color.Red,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
-            ExposedDropdownMenu(
-                expanded = genderExpanded,
-                onDismissRequest = { genderExpanded = false }
-            ) {
-                genders.forEach { g ->
-                    DropdownMenuItem(
-                        text = { Text(g) },
-                        onClick = {
-                            gender = g
-                            genderExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Lokasi (Kota/Kabupaten)") },
-            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Red,
-                focusedLabelColor = Color.Red,
-                cursorColor = Color.Red,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-            )
-        )
-
         if (authState is AuthState.Error) {
             Text(
                 text = (authState as AuthState.Error).message,
@@ -292,8 +236,9 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && location.isNotBlank()) {
-                    authViewModel.register(name, email, phone, password, bloodType, location, gender)
+                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
+                    // Menggunakan nilai default "Bandar Lampung" dan "Laki-laki" karena dihapus dari UI registrasi
+                    authViewModel.register(name, email, phone, password, bloodType, "Bandar Lampung", "Laki-laki")
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),

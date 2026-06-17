@@ -91,6 +91,12 @@ interface ApiService {
         @Body donation: DonationResponse
     ): DonationResponse
 
+    @DELETE("donations/{userId}/{id}.json")
+    suspend fun deleteFirebaseDonation(
+        @Path("userId") userId: String,
+        @Path("id") id: String
+    ): Response<Unit>
+
     @GET("chats/{roomId}.json")
     suspend fun getChatMessages(
         @Path("roomId") roomId: String

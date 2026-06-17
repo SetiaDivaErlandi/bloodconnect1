@@ -62,10 +62,6 @@ class BloodViewModel(val repository: BloodRepository) : ViewModel() {
         }
     }
 
-    /**
-     * Mengambil data SOS dan melakukan filtering berdasarkan userId.
-     * Jika currentUserId diberikan, hanya menampilkan SOS milik user tersebut.
-     */
     fun fetchSosRequests(currentUserId: String? = null) {
         viewModelScope.launch {
             _sosRequests.value = UiState.Loading
@@ -176,6 +172,20 @@ class BloodViewModel(val repository: BloodRepository) : ViewModel() {
                 }
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal mengirim formulir donor.")
+            }
+        }
+    }
+
+    fun deleteDonation(userId: String, donationId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.deleteDonation(userId, donationId)
+                if (result) {
+                    fetchDonations(userId)
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

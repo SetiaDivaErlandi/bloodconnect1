@@ -43,18 +43,23 @@ fun DonorFormScreen(
     var errorMessage by remember { mutableStateOf("") }
 
     val calendar = Calendar.getInstance()
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            val selectedDate = Calendar.getInstance()
-            selectedDate.set(year, month, dayOfMonth)
-            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-            donorDate = sdf.format(selectedDate.time).uppercase()
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    val datePickerDialog = remember {
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = Calendar.getInstance()
+                selectedDate.set(year, month, dayOfMonth)
+                val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                donorDate = sdf.format(selectedDate.time).uppercase()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            // Set minimal tanggal adalah hari ini
+            datePicker.minDate = System.currentTimeMillis() - 1000
+        }
+    }
 
     if (showErrorDialog) {
         AlertDialog(
@@ -171,12 +176,27 @@ fun DonorFormScreen(
                         errorMessage = "Nama Rumah Sakit dan Tanggal Donor harus diisi."
                         showErrorDialog = true
                     } else if (userData != null) {
+                        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        val selectedDate = try { sdf.parse(donorDate) } catch (e: Exception) { null }
+                        
+                        val todayCalendar = Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val today = todayCalendar.time
+                        
+                        // Cek apakah tanggal di masa depan
+                        val isFuture = selectedDate?.after(today) ?: false
+                        val defaultStatus = if (isFuture) "Menunggu" else "Selesai"
+
                         val donation = DonationResponse(
                             id = "don_${System.currentTimeMillis()}",
                             date = donorDate,
                             hospital = hospital.trim(),
-                            status = if (notes.isBlank()) "Selesai" else notes.trim(),
-                            isCompleted = true
+                            status = if (notes.isBlank()) defaultStatus else notes.trim(),
+                            isCompleted = !isFuture
                         )
                         bloodViewModel.submitDonation(
                             userId = userData!!.id,

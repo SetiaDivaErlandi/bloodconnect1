@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,10 +41,40 @@ fun DonorHistoryScreen(
     val donationsState by bloodViewModel.donations.collectAsState()
     val context = LocalContext.current
 
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var donationToCancel by remember { mutableStateOf<DonationResponse?>(null) }
+
     LaunchedEffect(userData) {
         userData?.id?.let { userId ->
             bloodViewModel.fetchDonations(userId)
         }
+    }
+
+    if (showCancelDialog && donationToCancel != null) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Batalkan Jadwal", fontWeight = FontWeight.Bold) },
+            text = { Text("Apakah Anda yakin ingin membatalkan riwayat/jadwal donor ini? Tindakan ini tidak dapat dibatalkan.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        userData?.id?.let { userId ->
+                            bloodViewModel.deleteDonation(userId, donationToCancel!!.id) {
+                                Toast.makeText(context, "Berhasil dibatalkan", Toast.LENGTH_SHORT).show()
+                                showCancelDialog = false
+                            }
+                        }
+                    }
+                ) {
+                    Text("YA, BATALKAN", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("TIDAK", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -73,30 +105,39 @@ fun DonorHistoryScreen(
                 }
                 is UiState.Success -> {
                     val list = state.data
-                    
-                    // Logic to find the latest donation and calculate eligibility
                     val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                    var latestDonationDate: Date? = null
                     
+                    val today = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.time
+
+                    var latestDate: Date? = null
+                    var hasUpcoming = false
+
                     list.forEach { donation ->
                         try {
                             val date = sdf.parse(donation.date)
-                            if (latestDonationDate == null || (date != null && date.after(latestDonationDate))) {
-                                latestDonationDate = date
+                            if (date != null) {
+                                if (latestDate == null || date.after(latestDate)) {
+                                    latestDate = date
+                                }
+                                if (date.after(today)) {
+                                    hasUpcoming = true
+                                }
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
 
-                    val calendar = Calendar.getInstance()
-                    val today = calendar.time
-                    
                     val nextDonationCalendar = Calendar.getInstance()
                     var isEligible = true
                     var nextDonationDateStr = ""
 
-                    latestDonationDate?.let { lastDate ->
+                    latestDate?.let { lastDate ->
                         nextDonationCalendar.time = lastDate
                         nextDonationCalendar.add(Calendar.DAY_OF_YEAR, 90)
                         
@@ -111,16 +152,25 @@ fun DonorHistoryScreen(
                         items(list.sortedByDescending { 
                             try { sdf.parse(it.date) } catch (e: Exception) { Date(0) } 
                         }) { item ->
-                            HistoryCard(item)
+                            HistoryCard(
+                                item = item,
+                                onCancel = {
+                                    donationToCancel = item
+                                    showCancelDialog = true
+                                }
+                            )
                         }
 
                         item {
                             NextDonorCard(
                                 eligible = isEligible,
+                                hasUpcoming = hasUpcoming,
                                 nextDate = nextDonationDateStr,
                                 onFillForm = {
                                     if (isEligible) {
                                         navController.navigate(Screen.DonorForm.route)
+                                    } else if (hasUpcoming) {
+                                        Toast.makeText(context, "Selesaikan jadwal donor Anda yang masih tertunda", Toast.LENGTH_SHORT).show()
                                     } else {
                                         Toast.makeText(context, "Anda belum memenuhi syarat jeda waktu 90 hari", Toast.LENGTH_SHORT).show()
                                     }
@@ -150,7 +200,20 @@ fun DonorHistoryScreen(
 }
 
 @Composable
-fun HistoryCard(item: DonationResponse) {
+fun HistoryCard(item: DonationResponse, onCancel: () -> Unit) {
+    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    val donationDate = try { sdf.parse(item.date) } catch (e: Exception) { null }
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+
+    val isFuture = donationDate?.after(today) ?: false
+    val displayStatus = if (isFuture) "Menunggu" else "Selesai"
+    val displayIsCompleted = !isFuture
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -187,22 +250,52 @@ fun HistoryCard(item: DonationResponse) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = item.status, 
+                    text = displayStatus, 
                     fontSize = 12.sp, 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isFuture) Color.Blue else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            if (item.isCompleted) {
-                Surface(
-                    color = Color(0xFFE8F5E9).copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(16.dp)
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (displayIsCompleted) {
+                    Surface(
+                        color = Color(0xFFE8F5E9).copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = "Completed",
+                            color = Color(0xFF2E7D32),
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    Surface(
+                        color = Color(0xFFE3F2FD).copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = "Pending",
+                            color = Color.Blue,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                IconButton(
+                    onClick = onCancel,
+                    modifier = Modifier.size(24.dp)
                 ) {
-                    Text(
-                        text = "Completed",
-                        color = Color(0xFF2E7D32),
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cancel",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -211,7 +304,7 @@ fun HistoryCard(item: DonationResponse) {
 }
 
 @Composable
-fun NextDonorCard(eligible: Boolean, nextDate: String, onFillForm: () -> Unit) {
+fun NextDonorCard(eligible: Boolean, hasUpcoming: Boolean, nextDate: String, onFillForm: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -227,11 +320,11 @@ fun NextDonorCard(eligible: Boolean, nextDate: String, onFillForm: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(if (eligible) Color(0xFF2E7D32) else Color.Red, shape = CircleShape),
+                        .background(if (eligible) Color(0xFF2E7D32) else if (hasUpcoming) Color.Blue else Color.Red, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (eligible) Icons.Default.Check else Icons.Default.Check, // You can change icon if needed
+                        imageVector = if (eligible) Icons.Default.Check else Icons.Default.Info, 
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
@@ -250,6 +343,18 @@ fun NextDonorCard(eligible: Boolean, nextDate: String, onFillForm: () -> Unit) {
                             color = Color(0xFF2E7D32), 
                             fontWeight = FontWeight.SemiBold, 
                             fontSize = 13.sp
+                        )
+                    } else if (hasUpcoming) {
+                        Text(
+                            text = "Status: Anda memiliki jadwal pending", 
+                            color = Color.Blue, 
+                            fontWeight = FontWeight.SemiBold, 
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = "Selesaikan jadwal tersebut terlebih dahulu.", 
+                            fontSize = 11.sp, 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
                         Text(
@@ -273,8 +378,7 @@ fun NextDonorCard(eligible: Boolean, nextDate: String, onFillForm: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (eligible) Color.Red else Color.Gray
                 ),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = true // Still enabled so we can show the Toast message when clicked
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Isi Formulir Donor", color = Color.White, fontWeight = FontWeight.Bold)
             }

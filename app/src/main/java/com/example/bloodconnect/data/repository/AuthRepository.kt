@@ -73,7 +73,9 @@ class AuthRepository(private val apiService: ApiService) {
         name: String,
         phone: String,
         location: String,
-        imageUrl: String
+        imageUrl: String,
+        bloodType: String,
+        gender: String
     ): UserModel? {
         val usersMap = apiService.getFirebaseUsers() ?: return null
         val existingResponse = usersMap[id] ?: usersMap.values.find { it.id == id } ?: return null
@@ -82,7 +84,9 @@ class AuthRepository(private val apiService: ApiService) {
             name = name.trim(),
             phone = phone.trim(),
             location = location.trim(),
-            imageUrl = imageUrl
+            imageUrl = imageUrl,
+            bloodType = bloodType,
+            gender = gender
         )
         apiService.registerFirebaseUser(id, updatedResponse)
         
@@ -90,11 +94,11 @@ class AuthRepository(private val apiService: ApiService) {
             id = id,
             name = updatedResponse.name ?: name,
             email = updatedResponse.email ?: "",
-            bloodType = updatedResponse.bloodType ?: "",
+            bloodType = updatedResponse.bloodType ?: bloodType,
             location = updatedResponse.location ?: location,
             imageUrl = updatedResponse.imageUrl ?: imageUrl,
             phone = updatedResponse.phone ?: phone,
-            gender = updatedResponse.gender ?: "Laki-laki"
+            gender = updatedResponse.gender ?: gender
         )
     }
 
