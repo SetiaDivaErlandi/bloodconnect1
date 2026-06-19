@@ -1,0 +1,166 @@
+package com.example.bloodconnect.model.local
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.bloodconnect.model.UserModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+
+
+class UserPreferences(private val context: Context) {
+
+    companion object {
+        private val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
+        private val USER_ID = stringPreferencesKey("user_id")
+        private val USER_NAME = stringPreferencesKey("user_name")
+        private val USER_EMAIL = stringPreferencesKey("user_email")
+        private val USER_BLOOD_TYPE = stringPreferencesKey("user_blood_type")
+        private val USER_LOCATION = stringPreferencesKey("user_location")
+        private val USER_IMAGE_URL = stringPreferencesKey("user_image_url")
+        private val USER_PHONE = stringPreferencesKey("user_phone")
+        private val USER_GENDER = stringPreferencesKey("user_gender")
+        private val USER_PASSWORD = stringPreferencesKey("user_password")
+        private val LAST_ACTIVITY_TIME = longPreferencesKey("last_activity_time")
+        private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
+        private val BOOKMARKS = stringSetPreferencesKey("bookmarks")
+        private val READ_HISTORY = stringSetPreferencesKey("read_history")
+        private val READ_SOS_IDS = stringSetPreferencesKey("read_sos_ids")
+        
+        private val REG_EMAIL = stringPreferencesKey("reg_email")
+        private val REG_PASSWORD = stringPreferencesKey("reg_password")
+        private val REG_NAME = stringPreferencesKey("reg_name")
+        private val REG_PHONE = stringPreferencesKey("reg_phone")
+        private val REG_BLOOD_TYPE = stringPreferencesKey("reg_blood_type")
+        private val REG_LOCATION = stringPreferencesKey("reg_location")
+        private val REG_GENDER = stringPreferencesKey("reg_gender")
+    }
+
+    val userData: Flow<UserModel?> = context.dataStore.data.map { preferences ->
+        if (preferences[IS_LOGGED_IN] == true) {
+            UserModel(
+                id = preferences[USER_ID] ?: "",
+                name = preferences[USER_NAME] ?: "",
+                email = preferences[USER_EMAIL] ?: "",
+                bloodType = preferences[USER_BLOOD_TYPE] ?: "",
+                location = preferences[USER_LOCATION] ?: "",
+                imageUrl = preferences[USER_IMAGE_URL] ?: "",
+                phone = preferences[USER_PHONE] ?: "",
+                gender = preferences[USER_GENDER] ?: "Laki-laki",
+                password = preferences[USER_PASSWORD] ?: ""
+            )
+        } else {
+            null
+        }
+    }
+
+    val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_LOGGED_IN] ?: false
+    }
+
+    suspend fun saveLoginSession(user: UserModel) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_LOGGED_IN] = true
+            preferences[USER_ID] = user.id
+            preferences[USER_NAME] = user.name
+            preferences[USER_EMAIL] = user.email
+            preferences[USER_BLOOD_TYPE] = user.bloodType
+            preferences[USER_LOCATION] = user.location
+            preferences[USER_IMAGE_URL] = user.imageUrl
+            preferences[USER_PHONE] = user.phone
+            preferences[USER_GENDER] = user.gender
+            preferences[USER_PASSWORD] = user.password
+            preferences[LAST_ACTIVITY_TIME] = System.currentTimeMillis()
+        }
+    }
+
+    suspend fun saveRegisteredUser(user: UserModel, password: String) {
+        context.dataStore.edit { preferences ->
+            preferences[REG_EMAIL] = user.email
+            preferences[REG_PASSWORD] = password
+            preferences[REG_NAME] = user.name
+            preferences[REG_PHONE] = user.phone
+            preferences[REG_BLOOD_TYPE] = user.bloodType
+            preferences[REG_LOCATION] = user.location
+            preferences[REG_GENDER] = user.gender
+        }
+    }
+
+    val registeredUser: Flow<Map<String, String>> = context.dataStore.data.map { preferences ->
+        mapOf(
+            "email" to (preferences[REG_EMAIL] ?: ""),
+            "password" to (preferences[REG_PASSWORD] ?: ""),
+            "name" to (preferences[REG_NAME] ?: ""),
+            "phone" to (preferences[REG_PHONE] ?: ""),
+            "bloodType" to (preferences[REG_BLOOD_TYPE] ?: ""),
+            "location" to (preferences[REG_LOCATION] ?: ""),
+            "gender" to (preferences[REG_GENDER] ?: "Laki-laki")
+        )
+    }
+
+    val lastActivityTime: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[LAST_ACTIVITY_TIME] ?: 0L
+    }
+
+    suspend fun updateLastActivityTime() {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_ACTIVITY_TIME] = System.currentTimeMillis()
+        }
+    }
+
+    val isDarkMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_DARK_MODE] ?: false
+    }
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_DARK_MODE] = enabled
+        }
+    }
+
+    val bookmarks: Flow<Set<String>> = context.dataStore.data.map { preferences ->
+        preferences[BOOKMARKS] ?: emptySet()
+    }
+
+    suspend fun toggleBookmark(title: String) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[BOOKMARKS] ?: emptySet()
+            if (current.contains(title)) {
+                preferences[BOOKMARKS] = current - title
+            } else {
+                preferences[BOOKMARKS] = current + title
+            }
+        }
+    }
+
+    val readHistory: Flow<Set<String>> = context.dataStore.data.map { preferences ->
+        preferences[READ_HISTORY] ?: emptySet()
+    }
+
+    suspend fun addArticleToHistory(title: String) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[READ_HISTORY] ?: emptySet()
+            preferences[READ_HISTORY] = current + title
+        }
+    }
+
+    val readSosIds: Flow<Set<String>> = context.dataStore.data.map { preferences ->
+        preferences[READ_SOS_IDS] ?: emptySet()
+    }
+
+    suspend fun markSosAsRead(sosId: String) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[READ_SOS_IDS] ?: emptySet()
+            preferences[READ_SOS_IDS] = current + sosId
+        }
+    }
+
+    suspend fun clearSession() {
+        context.dataStore.edit { preferences ->
+            preferences[IS_LOGGED_IN] = false
+        }
+    }
+}

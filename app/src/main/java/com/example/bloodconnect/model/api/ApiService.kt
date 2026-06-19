@@ -1,0 +1,123 @@
+package com.example.bloodconnect.model.api
+
+import com.example.bloodconnect.model.BloodDataResponse
+import com.example.bloodconnect.model.UserResponse
+import com.example.bloodconnect.model.Donor
+import com.example.bloodconnect.model.Article
+import com.example.bloodconnect.model.SosRequestResponse
+import com.example.bloodconnect.model.DonationResponse
+import com.example.bloodconnect.model.ChatMessage
+import com.example.bloodconnect.model.ChatListEntry
+import okhttp3.ResponseBody
+import retrofit2.Response
+import retrofit2.http.*
+
+interface ApiService {
+
+    @GET("articles.json")
+    suspend fun getBloodData(): BloodDataResponse
+ 
+    @GET("users.json")
+    suspend fun getUsers(): List<UserResponse>
+
+    @GET("users.json")
+    suspend fun getFirebaseUsers(): Map<String, UserResponse>?
+
+    @PUT("users/{id}.json")
+    suspend fun registerFirebaseUser(
+        @Path("id") id: String,
+        @Body user: UserResponse
+    ): UserResponse
+
+    @PATCH("users/{id}.json")
+    suspend fun updateFirebaseUserFields(
+        @Path("id") id: String,
+        @Body updates: Map<String, String>
+    ): ResponseBody
+
+    @GET("donors.json")
+    suspend fun getFirebaseDonors(): Map<String, Donor>?
+
+    @PUT("donors/{id}.json")
+    suspend fun saveFirebaseDonor(
+        @Path("id") id: String,
+        @Body donor: Donor
+    ): Donor
+
+    @GET("articles.json")
+    suspend fun getFirebaseArticles(): Map<String, Article>?
+
+    @PUT("articles/{id}.json")
+    suspend fun saveFirebaseArticle(
+        @Path("id") id: String,
+        @Body article: Article
+    ): Article
+
+    @GET("sos_requests.json")
+    suspend fun getFirebaseSosRequests(): Map<String, SosRequestResponse>?
+
+    @PUT("sos_requests/{id}.json")
+    suspend fun saveFirebaseSosRequest(
+        @Path("id") id: String,
+        @Body request: SosRequestResponse
+    ): SosRequestResponse
+
+    @DELETE("sos_requests/{id}.json")
+    suspend fun deleteFirebaseSosRequest(
+        @Path("id") id: String
+    ): Response<Unit>
+
+    @GET("sos_history/{userId}.json")
+    suspend fun getFirebaseSosHistory(
+        @Path("userId") userId: String
+    ): Map<String, SosRequestResponse>?
+
+    @PUT("sos_history/{userId}/{id}.json")
+    suspend fun saveFirebaseSosHistory(
+        @Path("userId") userId: String,
+        @Path("id") id: String,
+        @Body request: SosRequestResponse
+    ): SosRequestResponse
+
+    @GET("donations/{userId}.json")
+    suspend fun getFirebaseDonations(
+        @Path("userId") userId: String
+    ): Map<String, DonationResponse>?
+
+    @PUT("donations/{userId}/{id}.json")
+    suspend fun saveFirebaseDonation(
+        @Path("userId") userId: String,
+        @Path("id") id: String,
+        @Body donation: DonationResponse
+    ): DonationResponse
+
+    @DELETE("donations/{userId}/{id}.json")
+    suspend fun deleteFirebaseDonation(
+        @Path("userId") userId: String,
+        @Path("id") id: String
+    ): Response<Unit>
+
+    @GET("chats/{roomId}.json")
+    suspend fun getChatMessages(
+        @Path("roomId") roomId: String
+    ): Map<String, ChatMessage>?
+
+    @PUT("chats/{roomId}/{messageId}.json")
+    suspend fun sendChatMessage(
+        @Path("roomId") roomId: String,
+        @Path("messageId") messageId: String,
+        @Body message: ChatMessage
+    ): ChatMessage
+
+    @GET("chat_list/{userId}.json")
+    suspend fun getChatList(
+        @Path("userId") userId: String
+    ): Map<String, ChatListEntry>?
+
+    @PUT("chat_list/{userId}/{contactId}.json")
+    suspend fun updateChatListEntry(
+        @Path("userId") userId: String,
+        @Path("contactId") contactId: String,
+        @Body entry: ChatListEntry
+    ): ChatListEntry
+}
